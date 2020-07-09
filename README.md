@@ -29,9 +29,10 @@ Twitch giveaway chatbot with fair randomization
 
 # install and run
 
-Download
-Rename `settings.ini.sample` to `settings.ini`
-Edit `settings.ini`
+* Download
+* Rename `settings.ini.sample` to `settings.ini`
+* Edit `settings.ini`
+
 ```
 pip install -r requirements.txt
 python3 bot.py
