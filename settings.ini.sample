@@ -1,0 +1,8 @@
+[bot]
+; login as bot and get TMI_TOKEN from https://twitchapps.com/tmi/
+TMI_TOKEN=oauth:<hash>
+BOT_NICK=your_bot_nick
+CHANNEL=your_nick
+ADMIN=your_nick
+;; preffix for bot commands 
+; BOT_PREFIX=!
