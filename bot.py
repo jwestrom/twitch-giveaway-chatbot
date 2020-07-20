@@ -1,87 +1,182 @@
+import os
 import csv
 import random
 import configparser
+import logging
+import sys
+import asyncio
+from typing import Set, Any
+
 from twitchio.ext import commands
 
+logger = logging.getLogger('bot')
 
-class Giveaway:
-    def __init__(self, filename=None):
-        self.filename = filename or 'scoreboard.txt'
-        self.scoreboard = {}
-        self.opened = False
-        self.participants = set()
 
-    def read_scoreboard(self):
-        print('Reading scoreboard...')
-        self.scoreboard = {}
+class IgnoreList:
+    _users: Set[str]
+    _filename: str
+
+    def __init__(self, filename: str = None):
+        self._filename = filename or 'ignorelist.txt'
+        self._users = set()
+
+    def load(self):
+        logger.info('Loading ignorelist...')
+
+        if not os.path.isfile(self._filename):
+            logger.info('Ignorelist not found')
+            logger.info('Create empty ignorelist...')
+            with open(self._filename, 'a') as _file:
+                pass
+
         try:
-            with open(self.filename, 'r') as _file:
+            with open(self._filename, 'r') as _file:
                 rows = csv.reader(_file, delimiter=' ', quotechar='"')
-                for row in rows:
-                    name, weight, *_ = row
-                    if name and weight is not None:
-                        self.scoreboard[name] = int(weight)
+                for user, *_ in rows:
+                    if user:
+                        self._users.add(user.lower())
         except Exception as e:
             print('Fail to load "{self.filename}":', e)
 
-    def write_scoreboard(self):
-        print(f'Writing scoreboard to "{self.filename}"')
-        with open(self.filename, 'w') as _file:
+        logger.info(f'{len(self._users)} users ignored')
+        logger.debug(f'Ignored users: {self._users}')
+
+    def __contains__(self, user: str):
+        return user in self._users
+
+
+class Scoreboard:
+    _filename: str
+
+    def __init__(self, filename=None):
+        self._filename = filename or 'scoreboard.txt'
+        self._scoreboard = {}
+
+    def load(self):
+        logger.info('Loading scoreboard...')
+
+        if not os.path.isfile(self._filename):
+            return
+
+        scoreboard = {}
+        try:
+            with open(self._filename, 'r') as _file:
+                rows = csv.reader(_file, delimiter=' ', quotechar='"')
+                for row in rows:
+                    name, score, *_ = row
+                    if name and score is not None:
+                        scoreboard[name.lower()] = int(score)
+            self._scoreboard = scoreboard
+
+        except Exception as e:
+            logger.warning(f'Fail to load "{self._filename}":', e)
+
+        for name, score in scoreboard.items():
+            logger.debug(f'Scoreboard: {name} {score}')
+
+    def save(self):
+        logger.info(f'Saving scoreboard to "{self._filename}"')
+
+        with open(self._filename, 'w', newline='') as _file:
             _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            _writer.writerows(sorted(self.scoreboard.items(), key=lambda x: (-x[1], x[0])))
+            _writer.writerows(sorted(self._scoreboard.items(), key=lambda x: (-x[1], x[0])))
+
+    def get(self, user: str) -> int:
+        return self._scoreboard.get(user, 0)
+
+    def reset(self, user: str) -> None:
+        self._scoreboard[user] = 0
+
+    def bump(self, user: str, points: int) -> None:
+        logger.debug(f'Bumping score for user {user} with ')
+        if user in self._scoreboard:
+            self._scoreboard[user] += points
+        else:
+            self._scoreboard[user] = points
+
+
+class Giveaway:
+    scoreboard: Scoreboard
+    ignorelist: IgnoreList
+    opened: bool
+    participants: Set[str]
+    sub_luck: int
+
+    def __init__(self, sub_luck: int):
+        self.scoreboard = Scoreboard()
+        self.ignorelist = IgnoreList()
+        self.ignorelist.load()
+
+        self.opened = False
+        self.sub_luck = sub_luck
+        self.participants = set()
+        self._lock = asyncio.Lock()
 
     def open(self):
         if not self.opened:
-            self.read_scoreboard()
+            self.scoreboard.load()
             self.opened = True
             self.participants = set()
+            logger.info('Giveaway is opened')
 
     def reopen(self):
         if not self.opened:
             self.opened = True
+            logger.info('Giveaway is re-opened')
 
     def close(self):
         if self.opened:
-            self.write_scoreboard()
+            self.scoreboard.save()
             self.opened = False
-            print("=" * 20)
-            print(*self.participants)
-            print("=" * 20)
+            logger.info('Giveaway is closed')
+            logger.debug(f'Participants: {self.participants}')
 
     def winner(self):
         if self.opened:
-            print('Close giveaway to pick a winner')
+            logger.warning("Can't pick a winner: Close giveaway to pick a winner")
             return
 
         if not self.participants:
-            print('No participants')
+            logger.warning("Can't pick a winner: No participants")
             return
 
-        _participants = list(self.participants)
-        _weights = [self.scoreboard.get(name, 0) for name in _participants]
+        participants = list(self.participants)
+        weights = [self.scoreboard.get(name) for name in participants]
 
-        winner_name, *_ = random.choices(_participants, _weights)
+        winner_name, *_ = random.choices(participants, weights)
 
-        self.scoreboard[winner_name] = 0
+        self.scoreboard.reset(winner_name)
         self.participants.discard(winner_name)
-        self.write_scoreboard()
+        self.scoreboard.save()
 
         return winner_name
 
-    def add(self, name):
+    def add(self, name: str, is_subscriber: bool = False) -> None:
+        logger.debug(f'Try to add participant {name}')
+
         if not self.opened:
             return
         if name in self.participants:
             return
+        if name in self.ignorelist:
+            logger.debug(f'User {name} in ignorelist')
+            return
 
         self.participants.add(name)
-        if name in self.scoreboard:
-            self.scoreboard[name] += 1
+        if is_subscriber:
+            self.scoreboard.bump(name, self.sub_luck)
         else:
-            self.scoreboard[name] = 1
+            self.scoreboard.bump(name, 1)
 
 
 class Bot(commands.Bot):
+    SUB_LUCK: int
+    ADMIN: str
+    BOT_PREFIX: str
+    CHANNEL: str
+    BOT_NICK: str
+    TMI_TOKEN: str
+
     def __init__(self):
         config = configparser.ConfigParser()
         config.read('settings.ini')
@@ -91,6 +186,12 @@ class Bot(commands.Bot):
         self.CHANNEL = config['bot']['CHANNEL']
         self.BOT_PREFIX = config['bot'].get('BOT_PREFIX', '!')
         self.ADMIN = config['bot']['ADMIN']
+        self.SUB_LUCK = config['bot'].getint('SUB_LUCK', fallback=1)
+
+        self.giveaway = None
+        self.blacklist = None
+
+        self._lock = asyncio.Lock()
 
         super().__init__(
             irc_token=self.TMI_TOKEN,
@@ -99,68 +200,99 @@ class Bot(commands.Bot):
             initial_channels=[self.CHANNEL],
         )
 
+    async def event_pubsub(self, data):
+        pass
+
     def is_admin(self, user):
-        return user.name == self.ADMIN
+        return user.name.lower() == self.ADMIN.lower()
 
     async def event_ready(self):
-        self.giveaway = Giveaway()
-        self.giveaway.read_scoreboard()
-        print(f'== Bot {self.nick} ready ==')
+        self.giveaway = Giveaway(self.SUB_LUCK)
+        logger.info(f'Bot {self.nick} ready')
 
     async def event_message(self, message):
-        print(message.content[:120])
         await self.handle_commands(message)
 
     @commands.command(name='open', aliases=['o'])
     async def open_command(self, ctx):
         if self.is_admin(ctx.author):
-            if not self.giveaway.opened:
-                self.giveaway.open()
-                await ctx.send_me(f'== Giveaway is opened == Type !giveaway to participate')
+            async with self._lock:
+                logger.info('!open')
+                if not self.giveaway.opened:
+                    self.giveaway.open()
+                    await ctx.send_me(f'== Giveaway is opened == Type !giveaway to participate')
 
     @commands.command(name='reopen', aliases=['reo'])
     async def reopen_command(self, ctx):
         if self.is_admin(ctx.author):
-            if not self.giveaway.opened:
-                self.giveaway.reopen()
-                await ctx.send_me(f'== Giveaway is RE-opened == Harry up! Type !giveaway to participate')
+            async with self._lock:
+                logger.info('!reopen')
+                if not self.giveaway.opened:
+                    self.giveaway.reopen()
+                    await ctx.send_me(f'== Giveaway is RE-opened == Harry up! Type !giveaway to participate')
 
     @commands.command(name='close', aliases=['c'])
     async def close_command(self, ctx):
         if self.is_admin(ctx.author):
-            if self.giveaway.opened:
-                self.giveaway.close()
-                await ctx.send_me(f'== Giveaway is closed == Pick the winner')
+            async with self._lock:
+                logger.info('!close')
+                if self.giveaway.opened:
+                    self.giveaway.close()
+                    await ctx.send_me(f'== Giveaway is closed == Pick the winner')
 
     @commands.command(name='winner', aliases=['w'])
     async def winner_command(self, ctx):
         if self.is_admin(ctx.author):
-            winner = self.giveaway.winner()
-            if winner is not None:
-                await ctx.send_me(f'== The winner is @{winner} ==')
-            else:
-                await ctx.send_me(f'== No participants ==')
+            async with self._lock:
+                logger.info('!winner')
+                winner = self.giveaway.winner()
+                if winner is not None:
+                    await ctx.send_me(f'== The winner is @{winner} ==')
+                else:
+                    await ctx.send_me(f'== No participants ==')
 
     @commands.command(name='giveaway', aliases=['ga'])
     async def giveaway_command(self, ctx):
-        self.giveaway.add(ctx.author.name)
+        self.giveaway.add(ctx.author.name.lower(), ctx.author.is_subscriber)
 
     @commands.command(name='scoreboard', aliases=['sb'])
     async def scoreboard_command(self, ctx):
         if self.is_admin(ctx.author):
-            sb = ' '.join([
-                f'{name} {score}' 
-                for name, score in self.giveaway.scoreboard.items()
-                if score > 0
-            ])
-            if len(sb) > 200:
-                sb = sb[:200] + '...'
-            await ctx.send(f'== Luck factor == {sb}')
+            async with self._lock:
+                logger.info('!scoreboard')
+                for name in self.giveaway.participants:
+                    logger.info(f'Scoreboard: {name} {self.giveaway.scoreboard.get(name)}')
+
+    @commands.command(name='ignorelist')
+    async def ignorelist_command(self, ctx):
+        if self.is_admin(ctx.author):
+            async with self._lock:
+                logger.info('!ignorelist')
+                for name in self.giveaway.ignorelist._users:
+                    logger.info(f'Ignorelist: {name}')
+
+    @commands.command(name='me')
+    async def me_command(self, ctx):
+        if ctx.author.is_subscriber:
+            await ctx.send_me(f'==> {ctx.author.name} is sub SeemsGood')
+        else:
+            await ctx.send_me(f'==> {ctx.author.name} is not sub Kappa')
 
     async def event_command_error(self, ctx, error):
-        print(f'Error: {error}')
+        logger.error(f'Error: {error}', exc_info=True)
 
 
 if __name__ == "__main__":
+    file_handler = logging.FileHandler('bot.log')
+    file_handler.setLevel(logging.DEBUG)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(logging.INFO)
+
+    logging.basicConfig(
+        format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
+        level=logging.DEBUG,
+        handlers=[file_handler, stream_handler],
+    )
+
     bot = Bot()
     bot.run()

@@ -1,9 +1,12 @@
+.DS_Store
+
 .vscode
 .idea
 
 settings.ini
 scoreboard.txt
-test.ipydb
+ignorelist.txt
+test.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
