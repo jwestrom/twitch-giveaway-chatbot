@@ -4,19 +4,19 @@ Twitch giveaway chatbot with fair randomization
 ```
 !open 
   [only-admin]
-   drop participation list to empty and read scores from file scoreboard.txt
+  drop participation list to empty and read scores from file scoreboard.txt
 
 !reopen 
   [only-admin]
-   just reopen giveaway if it's closed 
+  just reopen giveaway if it's closed 
 
 !close 
   [only-admin]
   stop getting new participators and save scoreboard to scoreboard.txt
 
-!scoreboard
-  [only-admin]
-  for debug; returns scores (aka luck factors)
+!me
+  [everyone]
+  checks is self is subscriber
 
 !winner 
   [only-admin]
