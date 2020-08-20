@@ -63,15 +63,17 @@ class Scoreboard:
             with open(self._filename, 'r') as _file:
                 rows = csv.reader(_file, delimiter=' ', quotechar='"')
                 for row in rows:
-                    name, score, *_ = row
-                    if name and score is not None:
-                        scoreboard[name.lower()] = int(score)
+                    name, temp = row
+                    scub = [str(temp)[1:-1][0], str(temp)[1:-1][-1]]
+                    if name and scub[0] is not None:
+                        scoreboard[name.lower()] = [int(scub[0]), bool(scub[1])]
             self._scoreboard = scoreboard
 
         except Exception as e:
             logger.warning(f'Fail to load "{self._filename}":', e)
 
-        for name, score in scoreboard.items():
+        for name, temp in scoreboard.items():
+            score = str(temp)[1:-1][0]
             logger.debug(f'Scoreboard: {name} {score}')
 
     def save(self):
@@ -79,20 +81,27 @@ class Scoreboard:
 
         with open(self._filename, 'w', newline='') as _file:
             _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            _writer.writerows(sorted(self._scoreboard.items(), key=lambda x: (-x[1], x[0])))
+            _writer.writerows(self._scoreboard.items())
 
-    def get(self, user: str) -> int:
-        return self._scoreboard.get(user, 0)
+    def get(self, user: str) -> list:
+        return self._scoreboard.get(user)
 
     def reset(self, user: str) -> None:
-        self._scoreboard[user] = 0
+        self._scoreboard[user] = [0, self._scoreboard.get(user)[1]]
+
+    def add(self, user: str, sub: bool) -> None:
+        logger.info(f"Adding user {user}.")
+        if user in self._scoreboard:
+            self._scoreboard[user] = [self._scoreboard.get(user)[0] + 1, bool(sub)]
+        else:
+            self._scoreboard[user] = [1, bool(sub)]
 
     def bump(self, user: str, points: int) -> None:
-        logger.debug(f'Bumping score for user {user} with ')
+        logger.debug(f'Bumping score for user {user} with {points}')
         if user in self._scoreboard:
-            self._scoreboard[user] += points
+            self._scoreboard[user] = [self._scoreboard.get(user)[0] + points, self._scoreboard.get(user)[1]]
         else:
-            self._scoreboard[user] = points
+            self._scoreboard[user] = [points, self._scoreboard.get(user)[1]]
 
 
 class Giveaway:
@@ -141,8 +150,12 @@ class Giveaway:
             return
 
         participants = list(self.participants)
-        weights = [self.scoreboard.get(name) for name in participants]
-
+        weights = []
+        for name in participants:
+            terrance = self.scoreboard.get(name)
+            weights.append(terrance[0])
+            if terrance[1]:
+                weights[-1] = weights[-1] * self.sub_luck
         winner_name, *_ = random.choices(participants, weights)
 
         self.scoreboard.reset(winner_name)
@@ -151,8 +164,8 @@ class Giveaway:
 
         return winner_name
 
-    def add(self, name: str, is_subscriber: bool = False) -> None:
-        logger.debug(f'Try to add participant {name}')
+    def add(self, name: str, sub: bool) -> None:
+        logger.debug(f'Trying to add participant {name}')
 
         if not self.opened:
             return
@@ -163,10 +176,7 @@ class Giveaway:
             return
 
         self.participants.add(name)
-        if is_subscriber:
-            self.scoreboard.bump(name, self.sub_luck)
-        else:
-            self.scoreboard.bump(name, 1)
+        self.scoreboard.add(name, sub)
 
 
 class Bot(commands.Bot):
