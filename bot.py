@@ -156,7 +156,9 @@ class Giveaway:
             weights.append(terrance[0])
             if terrance[1]:
                 weights[-1] = weights[-1] * self.sub_luck
-        winner_name, *_ = random.choices(participants, weights)
+            logger.debug(f"Adding {name} with score {terrance[0]} which is {weights[-1]} after sub-luck.")
+        winner_name, w = random.choices(participants, weights)
+        logger.debug(f"Drawing winner... Winner is {winner_name} that won with a weight of: {w}")
 
         self.scoreboard.reset(winner_name)
         self.participants.discard(winner_name)
@@ -175,6 +177,7 @@ class Giveaway:
             logger.debug(f'User {name} in ignorelist')
             return
 
+        logger.debug(f"Adding {name} to giveaway.")
         self.participants.add(name)
         self.scoreboard.add(name, sub)
 
