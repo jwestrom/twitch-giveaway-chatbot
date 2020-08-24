@@ -178,6 +178,9 @@ class Giveaway:
         self.participants.add(name)
         self.scoreboard.add(name, sub)
 
+    def is_participating(self, name):
+        return name in self.participants
+
 
 class Bot(commands.Bot):
     SUB_LUCK: int
@@ -283,10 +286,10 @@ class Bot(commands.Bot):
 
     @commands.command(name='me')
     async def me_command(self, ctx):
-        if ctx.author.is_subscriber:
-            await ctx.send_me(f'==> {ctx.author.name} is sub SeemsGood')
+        if self.giveaway.is_participating(ctx.author.name):
+            await ctx.send_me(f'==> {ctx.author.name} is in this Giveaway chevel3Gasm')
         else:
-            await ctx.send_me(f'==> {ctx.author.name} is not sub Kappa')
+            await ctx.send_me(f'==> {ctx.author.name} is NOT in this Giveaway KEKW')
 
     async def event_command_error(self, ctx, error):
         logger.error(f'Error: {error}', exc_info=True)
