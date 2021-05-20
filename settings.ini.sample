@@ -4,6 +4,8 @@ TMI_TOKEN=oauth:<hash>
 BOT_NICK=your_bot_nick
 CHANNEL=your_nick
 ADMIN=your_nick
-SUB_LUCK=sub_luck_multiplier
+TIER1_LUCK=tier1_sub_luck_multiplier
+TIER2_LUCK=tier2_sub_luck_multiplier
+TIER3_LUCK=tier3_sub_luck_multiplier
 ;; preffix for bot commands 
 BOT_PREFIX=!
