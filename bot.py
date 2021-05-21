@@ -172,8 +172,8 @@ class Scoreboard:
 
     # Increases the luck of one player by points
     def bump(self, name: str, points: int) -> None:
-        logger.debug(f'Bumping score for user {name} with {points}')
         if name in self.scoreboard:
+            logger.debug(f'Bumping score for user {name} with {points}')
             self.scoreboard[name].luck = self.scoreboard[name].luck + points
         else:
             logger.warning(f'{name} is not in the scoreboard. Ignoring bump.')
