@@ -16,6 +16,7 @@ class APIHandler:
         self.accessToken = accessToken
         self.broadcasterID = broadcasterID
         logging.basicConfig(filename=f'{date.today().strftime("%Y-%m-%d")}-api.log',
+                            filemode='a',
                             format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
                             level=logging.DEBUG)
 
