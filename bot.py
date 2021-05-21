@@ -5,7 +5,7 @@ import configparser
 import logging
 import sys
 import asyncio
-from typing import Set, Dict
+from typing import Set, Dict, Any
 from datetime import date
 from twitchio.ext import commands
 
@@ -292,6 +292,8 @@ class Bot(commands.Bot):
     CLIENT_ID: str
     _scoreboard: Scoreboard
     _giveaway_word: str
+    _remindertime: int
+    _remindertask: Any
 
     # Init for the bot. Reads the config file and sets all values
     def __init__(self):
@@ -310,9 +312,9 @@ class Bot(commands.Bot):
                                       config['bot'].getint('TIER2_LUCK', fallback=350),
                                       config['bot'].getint('TIER3_LUCK', fallback=400),
                                       apihandler.APIHandler(config['bot']['CLIENT_ID'],
-                                                           config['bot']['ACCESS_TOKEN'],
-                                                           config['bot']['BROADCAST_ID']))
-
+                                                            config['bot']['ACCESS_TOKEN'],
+                                                            config['bot']['BROADCAST_ID']))
+        self._remindertime = config['bot'].getint('REMINDER_DELAY', fallback=300)
         self._giveaway_word = ''
         self.giveaway = None
         self.blacklist = None
@@ -325,6 +327,17 @@ class Bot(commands.Bot):
             prefix=self.BOT_PREFIX,
             initial_channels=[self.CHANNEL],
         )
+
+    async def giveaway_reminder(self):
+        while await asyncio.sleep(self._remindertime, result=True):
+            channel = bot.get_channel(self.CHANNEL)
+            loop = asyncio.get_event_loop()
+
+            if self._giveaway_word:
+                loop.create_task(channel.send_me(f'Giveaway is still open! Make sure to join with: {self._giveaway_word}'))
+            else:
+                loop.create_task(channel.send_me('Giveaway is still open! Make sure to join with: !giveaway'))
+
 
     async def event_pubsub(self, data):
         pass
@@ -357,6 +370,11 @@ class Bot(commands.Bot):
             async with self._lock:
                 logger.info('!open')
                 if not self.giveaway.opened:
+                    try:
+                        self._remindertask = asyncio.get_event_loop().call_later(5)
+                    except asyncio.CancelledError:
+                        pass
+
                     self.giveaway.open()
                     word = ctx.content.split(' ')[-1]
                     if word != "!open":
@@ -386,6 +404,7 @@ class Bot(commands.Bot):
             async with self._lock:
                 logger.info('!close')
                 if self.giveaway.opened:
+                    self._remindertask.cancel()
                     self.giveaway.close()
                     await ctx.send_me(f'== Giveaway is closed == Pick the winner')
 
@@ -395,6 +414,7 @@ class Bot(commands.Bot):
     async def winner_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
+                self._giveaway_word = '' # Clears the giveaway word to avoid weird effects
                 logger.info('!winner')
                 self.giveaway.draw()
                 winner = self.giveaway.winner

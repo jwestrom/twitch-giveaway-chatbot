@@ -17,5 +17,7 @@ LUCK_BUMP=10
 TIER1_LUCK=300
 TIER2_LUCK=350
 TIER3_LUCK=400
+; reminder_delay is how long the bot should wait before reminding chat that a giveaway is open
+REMINDER_DELAY=delay_in_seconds
 ; prefix for bot commands
 BOT_PREFIX=!
