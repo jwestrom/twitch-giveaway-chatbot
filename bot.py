@@ -5,12 +5,15 @@ import configparser
 import logging
 import sys
 import asyncio
-import json
-from typing import Set, Any, Dict
-
+from typing import Set, Dict
+from datetime import date
 from twitchio.ext import commands
 
-logger = logging.getLogger('bot')
+import apihandler
+from apihandler import APIHandler
+
+logger = logging.getLogger(__name__)
+
 
 # Ignorelist of users that are not allowed to participate in giveaways.
 class IgnoreList:
@@ -21,7 +24,8 @@ class IgnoreList:
         self._filename = filename or 'ignorelist.txt'
         self._users = set()
 
-    def load(self):
+    # Loads the ignorelist from file
+    def load(self) -> None:
         logger.info('Loading ignorelist...')
 
         if not os.path.isfile(self._filename):
@@ -42,98 +46,139 @@ class IgnoreList:
         logger.info(f'{len(self._users)} users ignored')
         logger.debug(f'Ignored users: {self._users}')
 
-    def __contains__(self, name: str):
-        return name in self._users
+    # Saves the ignorelist to file
+    # Not implemented
+    def save(self) -> None:
+        logger.info('Saving ignorelist...')
+        with open(self._filename, 'w') as _file:
+            _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            _writer.writerows(self._users)
+
+    # Adds a username to the ignorelist
+    # Not implemented
+    def add(self, name) -> None:
+        if name not in self._users:
+            self._users.add(name.lower())
+
+    # Checks if a username is in the ignorelist
+    def __contains__(self, name: str) -> bool:
+        return name.lower in self._users
+
 
 # Class for users in the giveaways. Keeps track of name, subscriber tier, current luck and lifetime giveaway entries.
 class User:
     name: str
     luck: int
-    subscriber_tier: int
+    tier: int
     lifetime: int
+    id: str
 
-    def __init__(self, name: str, luck: int, tier: int, lifetime: int):
+    def __init__(self, name: str, luck: int, tier: int, lifetime: int, userid: str = ''):
         self.name = name
         self.tier = tier
         self.luck = luck
         self.lifetime = lifetime
+        self.id = f'{userid}'
 
-    def toCsv(self):
-        return f'{self.name} {self.tier} {self.luck} {self.lifetime}'
 
 # Scoreboard that keeps track of all users who have ever participated.
 # Is loaded from a file when the program starts.
 class Scoreboard:
-    _filename: str
+    filename: str
+    scoreboard: Dict[str, User]
+    api: APIHandler
+    luck_bump: int
+    tier1_luck: int
+    tier2_luck: int
+    tier3_luck: int
 
-    def __init__(self, filename=None):
-        self._filename = filename or 'scoreboard.txt'
-        self._scoreboard = {}
+    def __init__(self, bump: int, tier1: int, tier2: int, tier3: int, api: APIHandler, filename=None):
+        self.filename = filename or 'scoreboard.txt'
+        self.luck_bump = bump
+        self.tier1_luck = tier1
+        self.tier2_luck = tier2
+        self.tier3_luck = tier3
+        self.api = api
+        self.scoreboard = {}
 
     # Load the scoreboard from a file.
     def load(self):
         logger.info('Loading scoreboard...')
 
-        if not os.path.isfile(self._filename):
+        if not os.path.isfile(self.filename):
             logger.error("Could not find file!")
             return
 
         scoreboard = {}
         try:
-            with open(self._filename, 'r') as _file:
+            with open(self.filename, 'r') as _file:
                 rows = csv.reader(_file, delimiter=' ', quotechar='"')
+                next(rows)
                 for row in rows:
-                    name, tier, luck, lifetime = row
+                    name, tier, luck, lifetime, userID = row
                     if name is not None:
-                        scoreboard[name.lower()] = User(name, luck, tier, lifetime)
-            self._scoreboard = scoreboard
+                        scoreboard[name.lower()] = User(name, int(luck), int(tier), int(lifetime), userID)
+            self.scoreboard = scoreboard
 
         except Exception as e:
-            logger.warning(f'Fail to load "{self._filename}":', e)
+            logger.warning(f'Fail to load "{self.filename}":', e)
 
-        for user in scoreboard.items():
-            logger.debug(f'Scoreboard: {user.name} {user.luck}')
+        logger.debug("Scoreboard - Name : Luck")
+        for user in scoreboard.values():
+            logger.debug(f'{user.name} : {user.luck}')
 
     # Save the scoreboard to a file.
     def save(self):
-        logger.info(f'Saving scoreboard to "{self._filename}"')
+        logger.info(f'Saving scoreboard to "{self.filename}"')
 
-        with open(self._filename, 'w', newline='') as _file:
+        with open(self.filename, 'w', newline='') as _file:
             _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            for u in Scoreboard:
-                _writer.writerow(u.toCsv)
+            _writer.writerow((["Username", "Luck", "Tier", "Lifetime", "ID"]))
+            for user in self.scoreboard.values():
+                _writer.writerow([user.name, user.luck, user.tier, user.lifetime, user.id])
 
     # Gets a user from the scoreboard.
     def get(self, name: str) -> User:
-        return self._scoreboard.get(name)
+        return self.scoreboard.get(name)
 
     # Reset the luck of a user to 0
     def reset(self, name: str) -> None:
-        self._scoreboard[name].luck = 0
+        self.scoreboard[name].luck = 0
 
     # Adds a user to the scoreboard. This is only called when a user is added to a giveaway.
     # If the user has participated before we increase luck and lifetime by 1
     # If the user is new we set luck and lifetime to 1
-    def add(self, name: str, tier: int) -> None:
+    # We also make sure that the user has a twitchID and gets their current subscription status
+    def add(self, name: str) -> None:
         logger.info(f"Adding user {name}.")
-        if name in self._scoreboard:
-            user = self._scoreboard.get(name)
-            user.luck = user.luck + 1
-            user.tier = tier
-            user.lifetime = user.lifetime + 1
-            self._scoreboard[name] = user
+        if name in self.scoreboard:
+            user = self.scoreboard.get(name)
+            user.luck += self.luck_bump
+            user.lifetime += 1
+            if not user.id:
+                user.id = self.api.getuserid(name)
+            tier = self.api.getsubscriptiontier(user.id)
+            if tier == '1000':
+                user.tier = self.tier1_luck
+            elif tier == '2000':
+                user.tier = self.tier2_luck
+            elif tier == '3000':
+                user.tier = self.tier3_luck
+            else:
+                user.tier = 0
+            self.scoreboard[name] = user
         else:
-            self._scoreboard[name] = User(name, luck=1, tier=tier, lifetime=1)
+            self.scoreboard[name] = User(name, luck=self.luck_bump, tier=0, lifetime=1)
 
+    # Increases the luck of one player by points
     def bump(self, name: str, points: int) -> None:
         logger.debug(f'Bumping score for user {name} with {points}')
-        if name in self._scoreboard:
-            self._scoreboard[name].luck = self._scoreboard[name].luck + points
+        if name in self.scoreboard:
+            self.scoreboard[name].luck = self.scoreboard[name].luck + points
         else:
             logger.warning(f'{name} is not in the scoreboard. Ignoring bump.')
 
-
-
+# Class for running the giveaways. Contains logic and draw randomization
 class Giveaway:
     scoreboard: Scoreboard
     ignorelist: IgnoreList
@@ -142,13 +187,14 @@ class Giveaway:
     winner_roll: int
     participants: Dict[str, User]
 
-    def __init__(self) -> None:
-        self.scoreboard = Scoreboard()
+    def __init__(self, scoreboard: Scoreboard) -> None:
+        self.scoreboard = scoreboard
         self.ignorelist = IgnoreList()
         self.ignorelist.load()
 
         self.opened = False
         self.winner = ""
+        self.winner_roll = 0
         self.participants = {}
         self._lock = asyncio.Lock()
 
@@ -157,7 +203,8 @@ class Giveaway:
         if not self.opened:
             if self.winner:
                 self.confirm_winner()
-                logger.debug(f'Winner was not manually confirmed in last giveaway. Last winner automatically confirmed.')
+                logger.debug(f'Winner was not manually confirmed in last giveaway.'
+                             f' Last winner automatically confirmed.')
             self.scoreboard.load()
             self.opened = True
             self.winner = ""
@@ -188,16 +235,16 @@ class Giveaway:
             logger.warning("Can't pick a winner: No participants")
             return
 
-        results: dict[str, int]
+        results: Dict[str, int] = {}
 
         for name, user in self.participants.items():
-            results[name] = random.randint(1, 100) + user.luck + user.tier
+            results[name] = random.randint(1, 1000) + user.luck + user.tier
 
         self.winner = max(results, key=results.get)
         self.winner_roll = results[self.winner]
         logger.debug(f"Drawing winner... Winner is {self.winner} that won with a value of: {self.winner_roll}")
 
-        self.participants.discard(self.winner)
+        self.participants.pop(self.winner)
 
     # Confirms the winner of the last giveaway. Resets the luck of the winner and saves the scoreboard.
     def confirm_winner(self) -> None:
@@ -205,7 +252,8 @@ class Giveaway:
         self.scoreboard.save()
 
     # Adds a user to the giveaway and to the scoreboard.
-    def add(self, name: str, tier: int) -> None:
+    # Checks if a giveaway is opened, if the user is already in the giveaway and if the name is on the ignorelist
+    def add(self, name: str) -> None:
         logger.debug(f'Trying to add participant {name}')
 
         if not self.opened:
@@ -220,7 +268,7 @@ class Giveaway:
 
         logger.debug(f"Adding {name} to giveaway.")
 
-        self.scoreboard.add(name, tier)
+        self.scoreboard.add(name)
         self.participants[name] = self.scoreboard.get(name)
         logger.debug(f'{name} added to giveaway.')
 
@@ -235,29 +283,37 @@ class Giveaway:
 
 
 class Bot(commands.Bot):
-    TIER1_LUCK: int
-    TIER2_LUCK: int
-    TIER3_LUCK: int
     ADMIN: str
     BOT_PREFIX: str
     CHANNEL: str
     BOT_NICK: str
     TMI_TOKEN: str
+    ACCESS_TOKEN: str
+    CLIENT_ID: str
+    _scoreboard: Scoreboard
+    _giveaway_word: str
 
+    # Init for the bot. Reads the config file and sets all values
     def __init__(self):
         config = configparser.ConfigParser()
         config.read('settings.ini')
 
         self.TMI_TOKEN = config['bot']['TMI_TOKEN']
+        self.ACCESS_TOKEN = config['bot']['ACCESS_TOKEN']
+        self.CLIENT_ID = config['bot']['CLIENT_ID']
         self.BOT_NICK = config['bot']['BOT_NICK']
         self.CHANNEL = config['bot']['CHANNEL']
         self.BOT_PREFIX = config['bot'].get('BOT_PREFIX', '!')
         self.ADMIN = config['bot']['ADMIN']
-        self.TIER1_LUCK = config['bot'].getint('TIER1_LUCK', fallback=30)
-        self.TIER2_LUCK = config['bot'].getint('TIER2_LUCK', fallback=35)
-        self.TIER3_LUCK = config['bot'].getint('TIER3_LUCK', fallback=40)
+        self._scoreboard = Scoreboard(config['bot'].getint('LUCK_BUMP', fallback=10),
+                                      config['bot'].getint('TIER1_LUCK', fallback=300),
+                                      config['bot'].getint('TIER2_LUCK', fallback=350),
+                                      config['bot'].getint('TIER3_LUCK', fallback=400),
+                                      apihandler.APIHandler(config['bot']['CLIENT_ID'],
+                                                           config['bot']['ACCESS_TOKEN'],
+                                                           config['bot']['BROADCAST_ID']))
 
-
+        self._giveaway_word = ''
         self.giveaway = None
         self.blacklist = None
 
@@ -273,31 +329,48 @@ class Bot(commands.Bot):
     async def event_pubsub(self, data):
         pass
 
-    def is_admin(self, user):
+    # Checks if the user is the admin/owner
+    def is_admin(self, user) -> bool:
         return user.name.lower() == self.ADMIN.lower()
 
-    async def event_ready(self):
-        self.giveaway = Giveaway()
+    # Triggers when the bot is ready
+    async def event_ready(self) -> None:
+        self.giveaway = Giveaway(scoreboard=self._scoreboard)
+        self._scoreboard.load()
         logger.info(f'Bot {self.nick} ready')
 
-    async def event_message(self, message):
-        await self.handle_commands(message)
+    # Reads every message sent in chat. Looks for the giveaway keyword and enters users if a giveaway is open.
+    async def event_message(self, ctx) -> None:
+        if ctx.author.name.lower() == self.BOT_NICK.lower():
+            return
+        if ctx.content == self._giveaway_word:
+            if self.giveaway.opened:
+                logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
+                self.giveaway.add(ctx.author.name.lower())
+        await self.handle_commands(ctx)
 
     # Opens a new giveaway
     # Admin only
     @commands.command(name='open', aliases=['o'])
-    async def open_command(self, ctx):
+    async def open_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!open')
                 if not self.giveaway.opened:
                     self.giveaway.open()
-                    await ctx.send_me(f'== Giveaway is opened == Type !giveaway to participate')
+                    word = ctx.content.split(' ')[-1]
+                    if word != "!open":
+                        self._giveaway_word = word
+                        await ctx.send_me(f'== Giveaway is opened! == '
+                                          f'Giveaway word is: {self._giveaway_word} ==')
+                    else:
+                        await ctx.send_me('== Giveaway is opened! == '
+                                          'Type !giveaway to participate ==')
 
     # Re-opens a closed giveaway.
     # Admin only
     @commands.command(name='reopen', aliases=['reo'])
-    async def reopen_command(self, ctx):
+    async def reopen_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!reopen')
@@ -308,7 +381,7 @@ class Bot(commands.Bot):
     # Closes the current giveaway
     # Admin only
     @commands.command(name='close', aliases=['c'])
-    async def close_command(self, ctx):
+    async def close_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!close')
@@ -319,22 +392,22 @@ class Bot(commands.Bot):
     # If the giveaway is closed, draw a winner and present them.
     # Admin only
     @commands.command(name='winner', aliases=['w'])
-    async def winner_command(self, ctx):
+    async def winner_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!winner')
                 self.giveaway.draw()
                 winner = self.giveaway.winner
-                if winner is not None:
-                    await ctx.send_me(f'== The winner is @{winner} =='
-                                      f'== Winning roll: {self.giveaway.winner_roll}==')
+                if winner:
+                    await ctx.send_me(f'== The winner is @{winner} == '
+                                      f'Winning roll: {self.giveaway.winner_roll}==')
                 else:
                     await ctx.send_me(f'== No participants ==')
 
     # Confirms the winner of the last giveaway.
     # Admin only
     @commands.command(name='confirm', aliases=['cf'])
-    async def confirm_command(self, ctx):
+    async def confirm_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 if self.giveaway.winner:
@@ -346,53 +419,82 @@ class Bot(commands.Bot):
 
     # Enters the user into the current giveaway.
     @commands.command(name='giveaway', aliases=['ga'])
-    async def giveaway_command(self, ctx):
+    async def giveaway_command(self, ctx) -> None:
         if self.giveaway.opened:
-            self.giveaway.add(ctx.author.name.lower(), ctx.author.is_subscriber)
+            logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
+            self.giveaway.add(ctx.author.name.lower())
         else:
             await ctx.send_me(f'There is currently no giveaway open.')
 
     # Prints, in the bot console, all users in the current giveaway, their luck stat and their tier stat
     @commands.command(name='scoreboard', aliases=['sb'])
-    async def scoreboard_command(self, ctx):
+    async def scoreboard_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!scoreboard')
+                logger.info('Scoreboard:')
+                logger.info('Name Luck Tier')
                 for name, user in self.giveaway.participants.items():
-                    logger.info(f'Scoreboard: {name} Luck: {user.luck} Tier: {user.tier}')
+                    logger.info(f'Name: {name} Luck: {user.luck} Tier: {user.tier}')
 
+    # Prints the ignorelist in the bot console
     @commands.command(name='ignorelist')
-    async def ignorelist_command(self, ctx):
+    async def ignorelist_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!ignorelist')
                 for name in self.giveaway.ignorelist._users:
                     logger.info(f'Ignorelist: {name}')
 
+    # Dummy command for later implementation of !ignore command
+    @commands.command(name='ignore')
+    async def ignore_command(self, ctx) -> None:
+        if self.is_admin(ctx.author):
+            async with self._lock:
+                logger.info('!ignore')
+                logger.info('Command currently not implemented')
+
+    # Checks if a user is in the current giveaway and presents it in chat
     @commands.command(name='me')
-    async def me_command(self, ctx):
+    async def me_command(self, ctx) -> None:
         if self.giveaway.is_participating(ctx.author.name):
             await ctx.send_me(f'==> {ctx.author.name} is in this Giveaway chevel3Gasm')
         else:
             await ctx.send_me(f'==> {ctx.author.name} is NOT in this Giveaway KEKW')
 
-    @commands.command(name='stats')
-    async def luck_command(self, ctx):
+    # Gets the stats for a user and presents them in chat
+    @commands.command(name='stats', aliases=['lucky', 'howlucky'])
+    async def luck_command(self, ctx) -> None:
         user_stats = self.giveaway.user_stats(ctx.author.name)
-        await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]} and has participated in {user_stats[1]} giveaways!'
-                          f'')
+        user_stats[0] = user_stats[0] / 10
+        if user_stats[1] != 0:
+            user_stats[1] = user_stats[1]/10
 
-    async def event_command_error(self, ctx, error):
+        await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]}% '
+                          f'with a subscription bonus of {user_stats[1]}% '
+                          f'for a total of {user_stats[0] + user_stats[1]}%. '
+                          f'{ctx.author.name} has participated in {user_stats[2]} giveaways!')
+
+    # Increases a users luck by a number
+    @commands.command(name='bump', aliases=['giveluck'])
+    async def bump_command(self, ctx) -> None:
+        if self.is_admin(ctx.author):
+            _, user, luck, *_ = ctx.content.split(' ')
+            if user and luck:
+                self._scoreboard.bump(user[1:], int(luck))
+
+    async def event_command_error(self, ctx, error) -> None:
         logger.error(f'Error: {error}', exc_info=True)
 
 
 if __name__ == "__main__":
-    file_handler = logging.FileHandler('bot.log')
+    file_handler = logging.FileHandler(f'{date.today().strftime("%Y-%m-%d")}-bot.log')
     file_handler.setLevel(logging.DEBUG)
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setLevel(logging.INFO)
 
-    logging.basicConfig(format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s', level=logging.DEBUG, handlers=[file_handler, stream_handler])
+    logging.basicConfig(format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
+                        level=logging.DEBUG, handlers=[file_handler, stream_handler])
 
     bot = Bot()
     bot.run()

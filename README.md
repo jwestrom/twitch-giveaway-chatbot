@@ -1,30 +1,56 @@
 # twitch-giveaway-chatbot
-Twitch giveaway chatbot with fair randomization
+Twitch giveaway chatbot with increasing luck for every giveaway a user participates in but does not win.
+Subscribers receive additional luck depending on their subscription tier. THe amount of luck can be changed in the config.
+The bot requires a TMI token, an Access token and your client ID.
 
 ```
 !open 
-  [only-admin]
-  drop participation list to empty and read scores from file scoreboard.txt
+  [only admin]
+  opens a giveaway. Chat users can join with !giveaway
+ 
+!open word
+  [only admin]
+  opens a giveaway with the word as a keyword. !giveaway does not work when using this.
 
 !reopen 
-  [only-admin]
+  [only admin]
   just reopen giveaway if it's closed 
 
 !close 
-  [only-admin]
-  stop getting new participators and save scoreboard to scoreboard.txt
+  [only admin]
+  stop getting new participants and save scoreboard to scoreboard.txt
+
+!winner 
+  [only admin]
+  pick winner; yell nickname in chat; save scoreboard file; remove from current giveaway participant list (so if list is empty next !winner will return 'no party' and will do nothing)
+
+!confirm
+  [only admin]
+  confirms the last winner and reset their luck to 0. This is done automatically when a giveaway is opened.
+
+!bump @user n
+  [only admin]
+  increases a users luck by n
+  
+!ignorelist
+  [admin only]
+  prints the currently ignored users to the bot console.
+  
+!scoreboard
+  [admin only]
+  prinst the current scoreboard to the bot console.
 
 !me
   [everyone]
-  checks is self is subscriber
-
-!winner 
-  [only-admin]
-  pick winner; yell nickname in chat; set score to 0; save scoreboard file; remove from current giveaway participant list (so if list is empty next !winner will return 'no party' and will do nothing)
+  checks if self is in the current giveaway
 
 !giveaway 
   [everyone]
   only accepts if giveaway's opened
+
+!stats
+  [everyone]
+  gets the users stats, current luck, subscriber luck and lifetime entries.
 ```
 
 # install and run

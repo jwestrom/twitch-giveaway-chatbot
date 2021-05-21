@@ -1,11 +1,20 @@
 [bot]
 ; login as bot and get TMI_TOKEN from https://twitchapps.com/tmi/
+; login as user and get ACCESS_TOKEN and CLIENT_ID at https://twitchtokengenerator.com/
+; The token needs chat:read, chat:edit, channel:moderate and channel:read:subscriptions
 TMI_TOKEN=oauth:<hash>
+ACCESS_TOKEN=your_access_token
+CLIENT_ID=your_client_id
+BROADCAST_ID=your_user_accounts_id
 BOT_NICK=your_bot_nick
 CHANNEL=your_nick
 ADMIN=your_nick
-TIER1_LUCK=tier1_sub_luck_multiplier
-TIER2_LUCK=tier2_sub_luck_multiplier
-TIER3_LUCK=tier3_sub_luck_multiplier
-;; preffix for bot commands 
+; LUCK_BUMP is how much the luck increases every time a user doesn't win.
+; The TIERn_LUCK is how much bonus the different tiers of subscribers get.
+; The giveaway rolls a 1000 sided dice.
+LUCK_BUMP=10
+TIER1_LUCK=300
+TIER2_LUCK=350
+TIER3_LUCK=400
+; prefix for bot commands
 BOT_PREFIX=!
