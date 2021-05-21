@@ -8,7 +8,8 @@ CLIENT_ID=your_client_id
 BROADCAST_ID=your_user_accounts_id
 BOT_NICK=your_bot_nick
 CHANNEL=your_nick
-ADMIN=your_nick
+; multiple admins are separated with only a comma, eg: ADMINS=name,anothername,thirdname
+ADMINS=your_nick
 ; LUCK_BUMP is how much the luck increases every time a user doesn't win.
 ; The TIERn_LUCK is how much bonus the different tiers of subscribers get.
 ; The giveaway rolls a 1000 sided dice.

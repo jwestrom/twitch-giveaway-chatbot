@@ -283,7 +283,7 @@ class Giveaway:
 
 
 class Bot(commands.Bot):
-    ADMIN: str
+    ADMINS: [str]
     BOT_PREFIX: str
     CHANNEL: str
     BOT_NICK: str
@@ -304,7 +304,7 @@ class Bot(commands.Bot):
         self.BOT_NICK = config['bot']['BOT_NICK']
         self.CHANNEL = config['bot']['CHANNEL']
         self.BOT_PREFIX = config['bot'].get('BOT_PREFIX', '!')
-        self.ADMIN = config['bot']['ADMIN']
+        self.ADMINS = config['bot']['ADMINS'].split(',')
         self._scoreboard = Scoreboard(config['bot'].getint('LUCK_BUMP', fallback=10),
                                       config['bot'].getint('TIER1_LUCK', fallback=300),
                                       config['bot'].getint('TIER2_LUCK', fallback=350),
@@ -329,9 +329,9 @@ class Bot(commands.Bot):
     async def event_pubsub(self, data):
         pass
 
-    # Checks if the user is the admin/owner
+    # Checks if the user is in the admin list
     def is_admin(self, user) -> bool:
-        return user.name.lower() == self.ADMIN.lower()
+        return user.name.lower() in (name.lower() for name in self.ADMINS)
 
     # Triggers when the bot is ready
     async def event_ready(self) -> None:
