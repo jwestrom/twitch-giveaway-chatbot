@@ -178,6 +178,11 @@ class Scoreboard:
         else:
             logger.warning(f'{name} is not in the scoreboard. Ignoring bump.')
 
+    # Returns a users stats: current luck, sub tier and lifetime participations.
+    def user_stats(self, name: str) -> [int, int, int]:
+        user = self.scoreboard.get(name)
+        return [int(user.luck / self.luck_bump), int(user.tier / 10), user.lifetime]
+
 # Class for running the giveaways. Contains logic and draw randomization
 class Giveaway:
     scoreboard: Scoreboard
@@ -250,7 +255,7 @@ class Giveaway:
         self.winner_roll = results[self.winner]
         self.winner_giveaways = int(self.scoreboard.get(self.winner).luck / self.luck_bump)
 
-        # Avoids some edge-cases where a user has received a manual luck bump. 
+        # Avoids some edge-cases where a user has received a manual luck bump.
         if self.winner_giveaways > self.scoreboard.get(self.winner).lifetime:
             self.winner_giveaways = self.scoreboard.get(self.winner).lifetime
         logger.debug(f"Drawing winner... Winner is {self.winner} that won with a value of: {self.winner_roll}")
@@ -286,11 +291,6 @@ class Giveaway:
     # Returns if the user is in the current giveaway or not.
     def is_participating(self, name) -> bool:
         return name in self.participants
-
-    # Returns a users stats: current luck, sub tier and lifetime participations.
-    def user_stats(self, name) -> [int, int, int]:
-        user = self.scoreboard.get(name)
-        return [user.luck, user.tier, user.lifetime]
 
 
 class Bot(commands.Bot):
@@ -488,7 +488,7 @@ class Bot(commands.Bot):
     # Checks if a user is in the current giveaway and presents it in chat
     @commands.command(name='me')
     async def me_command(self, ctx) -> None:
-        if self.giveaway.is_participating(ctx.author.name):
+        if self.giveaway.is_participating(ctx.author.name.lower()):
             await ctx.send_me(f'==> {ctx.author.name} is in this Giveaway chevel3Gasm')
         else:
             await ctx.send_me(f'==> {ctx.author.name} is NOT in this Giveaway KEKW')
@@ -496,15 +496,11 @@ class Bot(commands.Bot):
     # Gets the stats for a user and presents them in chat
     @commands.command(name='stats', aliases=['lucky', 'howlucky'])
     async def luck_command(self, ctx) -> None:
-        user_stats = self.giveaway.user_stats(ctx.author.name)
-        user_stats[0] = user_stats[0] / 10
-        if user_stats[1] != 0:
-            user_stats[1] = user_stats[1]/10
-
+        user_stats = self._scoreboard.user_stats(ctx.author.name.lower())
         await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]}% '
                           f'with a subscription bonus of {user_stats[1]}% '
                           f'for a total of {user_stats[0] + user_stats[1]}%. '
-                          f'{ctx.author.name} has participated in {user_stats[2]} giveaways!')
+                          f'{ctx.author.name} has participated in {user_stats[2]} total giveaways!')
 
     # Increases a users luck by a number
     @commands.command(name='bump', aliases=['giveluck'])
