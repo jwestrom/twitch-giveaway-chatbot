@@ -170,11 +170,11 @@ class Scoreboard:
         else:
             self.scoreboard[name] = User(name, luck=self.luck_bump, tier=0, lifetime=1)
 
-    # Increases the luck of one player by points
+    # Increases the luck of one player by n times the luck_bump
     def bump(self, name: str, points: int) -> None:
         if name in self.scoreboard:
             logger.debug(f'Bumping score for user {name} with {points}')
-            self.scoreboard[name].luck = self.scoreboard[name].luck + points
+            self.scoreboard[name].luck = self.scoreboard[name].luck + (points * self.luck_bump)
         else:
             logger.warning(f'{name} is not in the scoreboard. Ignoring bump.')
 
@@ -182,19 +182,23 @@ class Scoreboard:
 class Giveaway:
     scoreboard: Scoreboard
     ignorelist: IgnoreList
+    luck_bump: int
     opened: bool
     winner: str
     winner_roll: int
+    winner_giveaways: int
     participants: Dict[str, User]
 
-    def __init__(self, scoreboard: Scoreboard) -> None:
+    def __init__(self, scoreboard: Scoreboard, luck_bump: int) -> None:
         self.scoreboard = scoreboard
         self.ignorelist = IgnoreList()
         self.ignorelist.load()
 
+        self.luck_bump = luck_bump
         self.opened = False
         self.winner = ""
         self.winner_roll = 0
+        self.winner_giveaways = 0
         self.participants = {}
         self._lock = asyncio.Lock()
 
@@ -208,6 +212,8 @@ class Giveaway:
             self.scoreboard.load()
             self.opened = True
             self.winner = ""
+            self.winner_roll = 0
+            self.winner_giveaways = 0
             self.participants = {}
             logger.info('Giveaway is opened')
 
@@ -242,6 +248,7 @@ class Giveaway:
 
         self.winner = max(results, key=results.get)
         self.winner_roll = results[self.winner]
+        self.winner_giveaways = int(self.scoreboard.get(self.winner).luck / self.luck_bump)
         logger.debug(f"Drawing winner... Winner is {self.winner} that won with a value of: {self.winner_roll}")
 
         self.participants.pop(self.winner)
@@ -380,10 +387,10 @@ class Bot(commands.Bot):
                     if word != "!open":
                         self._giveaway_word = word
                         await ctx.send_me(f'== Giveaway is opened! == '
-                                          f'Giveaway word is: {self._giveaway_word} ==')
+                                          f'Type {self._giveaway_word} to participate! ==')
                     else:
                         await ctx.send_me('== Giveaway is opened! == '
-                                          'Type !giveaway to participate ==')
+                                          'Type !giveaway to participate! ==')
 
     # Re-opens a closed giveaway.
     # Admin only
