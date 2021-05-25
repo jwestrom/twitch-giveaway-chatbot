@@ -254,7 +254,6 @@ class Giveaway:
         self.winner = max(results, key=results.get)
         self.winner_roll = results[self.winner]
         self.winner_giveaways = int(self.scoreboard.get(self.winner).luck / self.luck_bump)
-
         # Avoids some edge-cases where a user has received a manual luck bump.
         if self.winner_giveaways > self.scoreboard.get(self.winner).lifetime:
             self.winner_giveaways = self.scoreboard.get(self.winner).lifetime
@@ -339,15 +338,16 @@ class Bot(commands.Bot):
             initial_channels=[self.CHANNEL],
         )
 
+    # Sends a reminder message every _remindertime seconds when a giveaway is opened.
     async def giveaway_reminder(self):
-        while await asyncio.sleep(self._remindertime, result=True):
-            channel = bot.get_channel(self.CHANNEL)
-            loop = asyncio.get_event_loop()
-
+        channel = bot.get_channel(self.CHANNEL)
+        loop = asyncio.get_event_loop()
+        while True:
             if self._giveaway_word:
                 loop.create_task(channel.send_me(f'Giveaway is still open! Make sure to join with: {self._giveaway_word}'))
             else:
                 loop.create_task(channel.send_me('Giveaway is still open! Make sure to join with: !giveaway'))
+            await asyncio.sleep(self._remindertime)
 
 
     async def event_pubsub(self, data):
@@ -382,7 +382,7 @@ class Bot(commands.Bot):
                 logger.info('!open')
                 if not self.giveaway.opened:
                     try:
-                        self._remindertask = asyncio.get_event_loop().call_later(5)
+                        self._remindertask = asyncio.ensure_future(self.giveaway_reminder())
                     except asyncio.CancelledError:
                         pass
 
