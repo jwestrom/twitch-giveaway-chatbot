@@ -424,9 +424,9 @@ class Bot(commands.Bot):
                 self._giveaway_word = '' # Clears the giveaway word to avoid weird effects
                 logger.info('!winner')
                 self.giveaway.draw()
-                winner = self.giveaway.winner
-                if winner:
-                    await ctx.send_me(f'== The winner is @{winner} == '
+                winner_name = self.giveaway.winner
+                if winner_name:
+                    await ctx.send_me(f'== The winner is @{winner_name} == '
                                       f'Winning roll: {self.giveaway.winner_roll}==')
                 else:
                     await ctx.send_me(f'== No participants ==')
