@@ -30,7 +30,7 @@ The bot requires a TMI token, an Access token and your client ID.
 
 !bump @user n
   [only admin]
-  increases a users luck by n
+  increases a users luck by n times the standard luck increase (see settings.ini)
   
 !ignorelist
   [admin only]
