@@ -395,6 +395,7 @@ class Bot(commands.Bot):
                         await ctx.send_me(f'== Giveaway is opened! == '
                                           f'Type {self._giveaway_word} to participate! ==')
                     else:
+                        self._giveaway_word = ""
                         await ctx.send_me('== Giveaway is opened! == '
                                           'Type !giveaway to participate! ==')
 
