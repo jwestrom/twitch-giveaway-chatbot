@@ -360,7 +360,7 @@ class Bot(commands.Bot):
 
     # Triggers when the bot is ready
     async def event_ready(self) -> None:
-        self.giveaway = Giveaway(scoreboard=self._scoreboard)
+        self.giveaway = Giveaway(scoreboard=self._scoreboard, luck_bump=self._scoreboard.luck_bump)
         self._scoreboard.load()
         logger.info(f'Bot {self.nick} ready')
 
