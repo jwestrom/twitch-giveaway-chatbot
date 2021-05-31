@@ -30,7 +30,8 @@ The bot requires a TMI token, an Access token and your client ID.
 
 !bump @user n
   [only admin]
-  increases a users luck by n times the standard luck increase (see settings.ini)
+  increases a users luck by n times the standard luck increase (see settings.ini).
+  By default this adds n percentage points, eg '!bump user 5' would increase the users luck from 0 -> 5% or 43 -> 48%
   
 !ignorelist
   [admin only]
