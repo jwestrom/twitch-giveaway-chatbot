@@ -343,6 +343,7 @@ class Bot(commands.Bot):
         channel = bot.get_channel(self.CHANNEL)
         loop = asyncio.get_event_loop()
         while True:
+            logger.info("Sending reminder to the chat.")
             if self._giveaway_word:
                 loop.create_task(channel.send_me(f'Giveaway is still open! Make sure to join with: {self._giveaway_word}'))
             else:
@@ -382,6 +383,7 @@ class Bot(commands.Bot):
                 logger.info('!open')
                 if not self.giveaway.opened:
                     try:
+                        logger.debug("Creating reminder task.")
                         self._remindertask = asyncio.ensure_future(self.giveaway_reminder())
                     except asyncio.CancelledError:
                         pass
@@ -415,6 +417,7 @@ class Bot(commands.Bot):
             async with self._lock:
                 logger.info('!close')
                 if self.giveaway.opened:
+                    logger.debug("Cancelling reminder task.")
                     self._remindertask.cancel()
                     self.giveaway.close()
                     await ctx.send_me(f'== Giveaway is closed == Pick the winner')
