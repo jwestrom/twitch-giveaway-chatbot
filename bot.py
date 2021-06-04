@@ -70,19 +70,22 @@ class IgnoreList:
         return name.lower in self.users
 
 
-# Class for users in the giveaways. Keeps track of name, subscriber tier, current luck and lifetime giveaway entries.
+# Class for users in the giveaways. Keeps track of name, subscriber tier, current luck,
+# lifetime giveaway entries, giveaway entries since last win and the userid.
 class User:
     name: str
     luck: int
     tier: int
     lifetime: int
+    since_last_win: int
     id: str
 
-    def __init__(self, name: str, luck: int, tier: int, lifetime: int, userid: str = ''):
+    def __init__(self, name: str, luck: int, tier: int, lifetime: int, since_last_win: int, userid: str = ''):
         self.name = name
         self.tier = tier
         self.luck = luck
         self.lifetime = lifetime
+        self.since_last_win = since_last_win
         self.id = f'{userid}'
 
 
