@@ -134,7 +134,7 @@ class Scoreboard:
             self.scoreboard = scoreboard
 
         except Exception as e:
-            logger.warning(f'Fail to load "{self.filename}":', e)
+            logger.warning(f'Fail to load "{self.FILENAME}":', e)
 
         logger.debug("Scoreboard - Name : Luck")
         for user in scoreboard.values():
