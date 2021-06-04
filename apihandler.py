@@ -52,7 +52,7 @@ class APIHandler:
 
         return idwithtier
 
-    # Gets the subscription of a single user
+    # Gets the subscription tier of a single user
     def getsubscriptiontier(self, userid: str) -> int:
         headers = {'Authorization': f'Bearer {self.accessToken}', 'Client-Id': self.clientID}
         url = 'https://api.twitch.tv/helix/subscriptions?'
@@ -60,7 +60,6 @@ class APIHandler:
         self.logger.info(f'Sending request for subscription tiers of {userid}')
         response = requests.get(url, headers=headers, params=payload)
         self.logger.info('Got response from API! Parsing and returning.')
-        print(response.json())
         data = response.json()['data']
         if data:
             return data[0]
