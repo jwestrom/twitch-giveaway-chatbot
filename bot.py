@@ -94,11 +94,6 @@ class User:
 class Scoreboard:
     FILENAME: str
     scoreboard: Dict[str, User]
-    api: APIHandler
-    luck_bump: int
-    tier1_luck: int
-    tier2_luck: int
-    tier3_luck: int
 
     def __init__(self, bump: int, tier1: int, tier2: int, tier3: int, api: APIHandler, filename=None):
         self.filename = filename or 'scoreboard.txt'
@@ -107,6 +102,11 @@ class Scoreboard:
         self.tier2_luck = tier2
         self.tier3_luck = tier3
         self.api = api
+    API: APIHandler
+    LUCK_BUMP: int
+    TIER1_LUCK: int
+    TIER2_LUCK: int
+    TIER3_LUCK: int
         self.scoreboard = {}
 
     # Load the scoreboard from a file.
