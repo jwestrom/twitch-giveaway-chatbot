@@ -442,7 +442,10 @@ class Bot(commands.Bot):
                     self.giveaway.open()
                     word = ctx.content.split(' ')[-1]
                     if word != "!open":
-                        self._giveaway_word = word
+                        if self.CASE_SENSITIVE:
+                            self.giveaway_word = word
+                        else:
+                            self.giveaway_word = word.lower()
                         await ctx.send_me(f'== Giveaway is opened! == '
                                           f'Type {self.giveaway_word} to participate! ==')
                     else:
