@@ -146,9 +146,9 @@ class Scoreboard:
 
         with open(self.FILENAME, 'w', newline='') as _file:
             _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            _writer.writerow((["Username", "Luck", "Tier", "Lifetime", "ID"]))
+            _writer.writerow((["Username", "Luck", "Tier", "Lifetime", "Since last win", "ID"]))
             for user in self.scoreboard.values():
-                _writer.writerow([user.name, user.luck, user.tier, user.lifetime, user.id])
+                _writer.writerow([user.name, user.luck, user.tier, user.lifetime, user.since_last_win, user.id])
 
     # Gets a user from the scoreboard.
     def get(self, name: str) -> User:
