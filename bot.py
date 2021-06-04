@@ -336,6 +336,8 @@ class Bot(commands.Bot):
     CHANNEL: str
     BOT_PREFIX: str
     ADMINS: [str]
+    CASE_SENSITIVE: bool
+    REMINDER_ENABLED: bool
     REMINDER_TIME: int
 
     scoreboard: Scoreboard
@@ -363,6 +365,9 @@ class Bot(commands.Bot):
                                      api=apihandler.APIHandler(clientID=self.CLIENT_ID,
                                                                accessToken=self.ACCESS_TOKEN,
                                                                broadcasterID=self.BROADCAST_ID))
+
+        self.CASE_SENSITIVE = config['giveaway'].getboolean('CASE_SENSITIVE', fallback=True)
+        self.REMINDER_ENABLED = config['giveaway'].getboolean('REMINDER_ENABLED', fallback=False)
         self.REMINDER_TIME = config['giveaway'].getint('REMINDER_DELAY', fallback=300)
         self.giveaway_word = ''
         self.giveaway = None
