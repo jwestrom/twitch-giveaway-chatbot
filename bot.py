@@ -541,13 +541,25 @@ class Bot(commands.Bot):
                 for name in self.giveaway.IGNORE_LIST.users:
                     logger.info(f'Ignorelist: {name}')
 
-    # Dummy command for later implementation of !ignore command
+    # Adds a username to the ignorelist
     @commands.command(name='ignore')
     async def ignore_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
-                logger.info('!ignore')
-                logger.info('Command currently not implemented')
+                _, user, *_ = ctx.content.split(' ')
+                if user:
+                    logger.info(f'!ignore-ing {user[1:].lower()}')
+                    self.giveaway.IGNORE_LIST.add(user[1:].lower())
+
+    # Removes a username from the ignorelist
+    @commands.command(name='clear')
+    async def clear_command(self, ctx) -> None:
+        if self.is_admin(ctx.author):
+            async with self._lock:
+                _, user, *_ = ctx.content.split(' ')
+                if user:
+                    logger.info(f'!clear-ing {user[1:].lower()}')
+                    self.giveaway.IGNORE_LIST.add(user[1:].lower())
 
     # Checks if a user is in the current giveaway and presents it in chat
     @commands.command(name='me')
