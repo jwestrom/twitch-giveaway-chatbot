@@ -127,7 +127,9 @@ class Scoreboard:
                 for row in rows:
                     name, luck, tier, lifetime, since_last_win, userID = row
                     if name is not None:
-                        scoreboard[name.lower()] = User(name, int(luck), int(tier), int(lifetime), userID)
+                        scoreboard[name.lower()] = User(name=name, luck=int(luck),
+                                                        tier=int(tier), lifetime=int(lifetime),
+                                                        since_last_win=int(since_last_win), userid=userID)
             self.scoreboard = scoreboard
 
         except Exception as e:
