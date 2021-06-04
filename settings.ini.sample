@@ -2,22 +2,35 @@
 ; login as bot and get TMI_TOKEN from https://twitchapps.com/tmi/
 ; login as user and get ACCESS_TOKEN and CLIENT_ID at https://twitchtokengenerator.com/
 ; The token needs chat:read, chat:edit, channel:moderate and channel:read:subscriptions
+; Your client_id can be found by sending a request to the twitch api,
+; reference: https://dev.twitch.tv/docs/api/reference#get-users
 TMI_TOKEN=oauth:<hash>
 ACCESS_TOKEN=your_access_token
 CLIENT_ID=your_client_id
 BROADCAST_ID=your_user_accounts_id
 BOT_NICK=your_bot_nick
 CHANNEL=your_nick
-; multiple admins are separated with only a comma, eg: ADMINS=name,anothername,thirdname
+; lower case only. multiple admins are separated with only a comma,  eg: ADMINS=name,anothername,thirdname
 ADMINS=your_nick
+; prefix for bot commands
+BOT_PREFIX=!
+
+[giveaway]
 ; LUCK_BUMP is how much the luck increases every time a user doesn't win.
 ; The TIERn_LUCK is how much bonus the different tiers of subscribers get.
 ; The giveaway rolls a 1000 sided dice.
+; SKIP_PUNISHMENT is how many % of the users luck is removed if they win but cannot claim the prize. can be 0
+; CASE_SENSITIVE is if the bot should check bot upper case and lower case to find the giveaway keyword. If this is false
+; the bot will check both upper case and lower case
 LUCK_BUMP=10
 TIER1_LUCK=300
 TIER2_LUCK=350
 TIER3_LUCK=400
-; reminder_delay is how long the bot should wait before reminding chat that a giveaway is open
+SKIP_PUNISHMENT=50
+CASE_SENSITIVE=True/False
+; REMINDER_ENABLED is if the bot will send reminders or not. If this is false no reminders will be sent.
+; REMINDER_DELAY is how many seconds the bot should wait before reminding chat that a giveaway is open. This needs to be
+; a number even if the reminder is not used.
+REMINDER_ENABLED=True/False
 REMINDER_DELAY=delay_in_seconds
-; prefix for bot commands
-BOT_PREFIX=!
+
