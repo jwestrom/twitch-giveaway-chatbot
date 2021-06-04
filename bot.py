@@ -350,6 +350,7 @@ class Bot(commands.Bot):
         self.TMI_TOKEN = config['bot']['TMI_TOKEN']
         self.ACCESS_TOKEN = config['bot']['ACCESS_TOKEN']
         self.CLIENT_ID = config['bot']['CLIENT_ID']
+        self.BROADCAST_ID = config['bot']['BROADCAST_ID']
         self.BOT_NICK = config['bot']['BOT_NICK']
         self.CHANNEL = config['bot']['CHANNEL']
         self.BOT_PREFIX = config['bot'].get('BOT_PREFIX', '!')
