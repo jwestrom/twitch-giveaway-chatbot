@@ -201,7 +201,7 @@ class Scoreboard:
         elif tier == '3000':
             return self.TIER3_LUCK
         else:
-            self.scoreboard[name] = User(name, luck=self.luck_bump, tier=0, lifetime=1)
+            return 0
 
     # Increases the luck of one player by n times the luck_bump
     def bump(self, name: str, points: int) -> None:
