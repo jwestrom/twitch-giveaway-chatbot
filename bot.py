@@ -564,7 +564,8 @@ class Bot(commands.Bot):
         await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]}% '
                           f'with a subscription bonus of {user_stats[1]}% '
                           f'for a total of {user_stats[0] + user_stats[1]}%. '
-                          f'{ctx.author.name} has participated in {user_stats[2]} total giveaways!')
+                          f'{ctx.author.name} has participated in {user_stats[2]} total giveaways'
+                          f' and {user_stats[3]} since their last win!')
 
     # Increases a users luck by a number
     @commands.command(name='bump', aliases=['giveluck'])
