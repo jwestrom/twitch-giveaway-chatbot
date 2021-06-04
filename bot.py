@@ -475,8 +475,9 @@ class Bot(commands.Bot):
             async with self._lock:
                 logger.info('!close-ing giveaway')
                 if self.giveaway.opened:
-                    logger.debug("Cancelling reminder task.")
-                    self._remindertask.cancel()
+                    if self.REMINDER_ENABLED: # Only try to cancel the reminder task if reminders are enabled
+                        logger.debug("Cancelling reminder task.")
+                        self.reminder_task.cancel()
                     self.giveaway.close()
                     await ctx.send_me(f'== Giveaway is closed == Pick the winner')
 
