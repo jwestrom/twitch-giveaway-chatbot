@@ -328,17 +328,19 @@ class Giveaway:
 
 
 class Bot(commands.Bot):
-    ADMINS: [str]
-    BOT_PREFIX: str
-    CHANNEL: str
-    BOT_NICK: str
     TMI_TOKEN: str
     ACCESS_TOKEN: str
     CLIENT_ID: str
-    _scoreboard: Scoreboard
-    _giveaway_word: str
-    _remindertime: int
-    _remindertask: Any
+    BROADCAST_ID: str
+    BOT_NICK: str
+    CHANNEL: str
+    BOT_PREFIX: str
+    ADMINS: [str]
+    REMINDER_TIME: int
+
+    scoreboard: Scoreboard
+    reminder_task: Any
+    giveaway_word: str
 
     # Init for the bot. Reads the config file and sets all values
     def __init__(self):
