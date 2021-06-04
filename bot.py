@@ -219,8 +219,8 @@ class Scoreboard:
 # Class for running the giveaways. Contains logic and draw randomization
 class Giveaway:
     scoreboard: Scoreboard
-    ignorelist: IgnoreList
-    luck_bump: int
+    IGNORE_LIST: IgnoreList
+    LUCK_BUMP: int
     opened: bool
     winner: str
     winner_roll: int
@@ -229,10 +229,10 @@ class Giveaway:
 
     def __init__(self, scoreboard: Scoreboard, luck_bump: int) -> None:
         self.scoreboard = scoreboard
-        self.ignorelist = IgnoreList()
-        self.ignorelist.load()
+        self.IGNORE_LIST = IgnoreList()
+        self.IGNORE_LIST.load()
 
-        self.luck_bump = luck_bump
+        self.LUCK_BUMP = luck_bump
         self.opened = False
         self.winner = ""
         self.winner_roll = 0
@@ -310,7 +310,7 @@ class Giveaway:
         if name in self.participants:
             logger.info(f'{name} is already in giveaway.')
             return
-        if name in self.ignorelist:
+        if name in self.IGNORE_LIST:
             logger.info(f'{name} is in ignorelist.')
             return
 
