@@ -279,6 +279,10 @@ class Giveaway:
             logger.warning("Can't pick a winner: No participants")
             return
 
+        # If draw() is called and there is already a winner the last winner gets punished for not claiming their prize.
+        if self.winner:
+            self.scoreboard.punish(self.winner)
+
         results: Dict[str, int] = {}
 
         for name, user in self.participants.items():
