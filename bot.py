@@ -493,7 +493,9 @@ class Bot(commands.Bot):
                 winner_name = self.giveaway.winner
                 if winner_name:
                     await ctx.send_me(f'== The winner is @{winner_name} == '
-                                      f'Winning roll: {self.giveaway.winner_roll}==')
+                                      f'Winning roll: {self.giveaway.winner_roll} == '
+                                      f'It took {self.scoreboard.get(self.giveaway.winner).since_last_win} giveaways '
+                                      f'to win ==')
                 else:
                     await ctx.send_me(f'== No participants ==')
 
