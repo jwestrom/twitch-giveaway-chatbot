@@ -125,7 +125,7 @@ class Scoreboard:
                 rows = csv.reader(_file, delimiter=' ', quotechar='"')
                 next(rows)
                 for row in rows:
-                    name, tier, luck, lifetime, userID = row
+                    name, luck, tier, lifetime, since_last_win, userID = row
                     if name is not None:
                         scoreboard[name.lower()] = User(name, int(luck), int(tier), int(lifetime), userID)
             self.scoreboard = scoreboard
