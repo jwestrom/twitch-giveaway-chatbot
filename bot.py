@@ -355,15 +355,16 @@ class Bot(commands.Bot):
         self.CHANNEL = config['bot']['CHANNEL']
         self.BOT_PREFIX = config['bot'].get('BOT_PREFIX', '!')
         self.ADMINS = config['bot']['ADMINS'].split(',')
-        self._scoreboard = Scoreboard(config['bot'].getint('LUCK_BUMP', fallback=10),
-                                      config['bot'].getint('TIER1_LUCK', fallback=300),
-                                      config['bot'].getint('TIER2_LUCK', fallback=350),
-                                      config['bot'].getint('TIER3_LUCK', fallback=400),
-                                      apihandler.APIHandler(config['bot']['CLIENT_ID'],
-                                                            config['bot']['ACCESS_TOKEN'],
-                                                            config['bot']['BROADCAST_ID']))
-        self._remindertime = config['bot'].getint('REMINDER_DELAY', fallback=300)
-        self._giveaway_word = ''
+        self.scoreboard = Scoreboard(bump=config['giveaway'].getint('LUCK_BUMP', fallback=10),
+                                     tier1=config['giveaway'].getint('TIER1_LUCK', fallback=300),
+                                     tier2=config['giveaway'].getint('TIER2_LUCK', fallback=350),
+                                     tier3=config['giveaway'].getint('TIER3_LUCK', fallback=400),
+                                     skip_punishment=config['giveaway'].getint('SKIP_PUNISHMENT', fallback=50),
+                                     api=apihandler.APIHandler(clientID=self.CLIENT_ID,
+                                                               accessToken=self.ACCESS_TOKEN,
+                                                               broadcasterID=self.BROADCAST_ID))
+        self.REMINDER_TIME = config['giveaway'].getint('REMINDER_DELAY', fallback=300)
+        self.giveaway_word = ''
         self.giveaway = None
         self.blacklist = None
 
