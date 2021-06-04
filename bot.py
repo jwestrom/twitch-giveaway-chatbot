@@ -179,6 +179,7 @@ class Scoreboard:
             user = self.scoreboard.get(name)
             user.luck += self.LUCK_BUMP
             user.lifetime += 1
+            user.since_last_win += 1
             if not user.id:
             self.scoreboard[name] = user
 
