@@ -462,7 +462,10 @@ class Bot(commands.Bot):
                 logger.info('!reopen-ing giveaway')
                 if not self.giveaway.opened:
                     self.giveaway.reopen()
-                    await ctx.send_me(f'== Giveaway is RE-opened == Harry up! Type !giveaway to participate')
+                    if self.giveaway_word:
+                        await ctx.send_me(f'== Giveaway is RE-opened == Hurry up! Type {self.giveaway_word} to participate ==')
+                    else:
+                        await ctx.send_me(f'== Giveaway is RE-opened == Hurry up! Type !giveaway to participate ==')
 
     # Closes the current giveaway
     # Admin only
