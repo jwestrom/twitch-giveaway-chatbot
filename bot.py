@@ -406,10 +406,16 @@ class Bot(commands.Bot):
     async def event_message(self, ctx) -> None:
         if ctx.author.name.lower() == self.BOT_NICK.lower():
             return
-        if ctx.content == self._giveaway_word:
-            if self.giveaway.opened:
-                logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
-                self.giveaway.add(ctx.author.name.lower())
+        if self.CASE_SENSITIVE:
+            if ctx.content == self.giveaway_word:
+                if self.giveaway.opened:
+                    logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
+                    self.giveaway.add(ctx.author.name.lower())
+        else:
+            if ctx.content.lower() == self.giveaway_word:
+                if self.giveaway.opened:
+                    logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
+                    self.giveaway.add(ctx.author.name.lower())
         await self.handle_commands(ctx)
 
     # Opens a new giveaway
