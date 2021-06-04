@@ -432,20 +432,21 @@ class Bot(commands.Bot):
             async with self._lock:
                 logger.info('!open-ing giveaway')
                 if not self.giveaway.opened:
-                    try:
-                        logger.debug("Creating reminder task.")
-                        self._remindertask = asyncio.ensure_future(self.giveaway_reminder())
-                    except asyncio.CancelledError:
-                        pass
+                    if self.REMINDER_ENABLED:
+                        try:
+                            logger.debug("Creating reminder task.")
+                            self.reminder_task = asyncio.ensure_future(self.giveaway_reminder())
+                        except asyncio.CancelledError:
+                            pass
 
                     self.giveaway.open()
                     word = ctx.content.split(' ')[-1]
                     if word != "!open":
                         self._giveaway_word = word
                         await ctx.send_me(f'== Giveaway is opened! == '
-                                          f'Type {self._giveaway_word} to participate! ==')
+                                          f'Type {self.giveaway_word} to participate! ==')
                     else:
-                        self._giveaway_word = ""
+                        self.giveaway_word = ""
                         await ctx.send_me('== Giveaway is opened! == '
                                           'Type !giveaway to participate! ==')
 
@@ -479,7 +480,7 @@ class Bot(commands.Bot):
     async def winner_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
-                self._giveaway_word = '' # Clears the giveaway word to avoid weird effects
+                self.giveaway_word = '' # Clears the giveaway word to avoid weird effects
                 logger.info('!winner')
                 self.giveaway.draw()
                 winner_name = self.giveaway.winner
@@ -528,7 +529,7 @@ class Bot(commands.Bot):
         if self.is_admin(ctx.author):
             async with self._lock:
                 logger.info('!ignorelist')
-                for name in self.giveaway.ignorelist._users:
+                for name in self.giveaway.IGNORE_LIST.users:
                     logger.info(f'Ignorelist: {name}')
 
     # Dummy command for later implementation of !ignore command
@@ -550,7 +551,7 @@ class Bot(commands.Bot):
     # Gets the stats for a user and presents them in chat
     @commands.command(name='stats', aliases=['lucky', 'howlucky'])
     async def luck_command(self, ctx) -> None:
-        user_stats = self._scoreboard.user_stats(ctx.author.name.lower())
+        user_stats = self.scoreboard.user_stats(ctx.author.name.lower())
         await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]}% '
                           f'with a subscription bonus of {user_stats[1]}% '
                           f'for a total of {user_stats[0] + user_stats[1]}%. '
