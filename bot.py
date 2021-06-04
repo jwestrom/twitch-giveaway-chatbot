@@ -181,6 +181,9 @@ class Scoreboard:
             user.lifetime += 1
             user.since_last_win += 1
             if not user.id:
+                user.id = self.API.getuserid(name)
+            user.tier = self.getUserTier(user.id)
+            self.scoreboard[name] = user
             self.scoreboard[name] = user
 
     # Gets subscription tier from a user id.
