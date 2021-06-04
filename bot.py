@@ -115,8 +115,9 @@ class Scoreboard:
     def load(self):
         logger.info('Loading scoreboard...')
 
-        if not os.path.isfile(self.filename):
-            logger.error("Could not find file!")
+        if not os.path.isfile(self.FILENAME):
+            logger.warning('Could not find file!')
+            logger.info('Creating new scoreboard.')
             return
 
         scoreboard = {}
