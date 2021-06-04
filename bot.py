@@ -92,7 +92,7 @@ class User:
 # Scoreboard that keeps track of all users who have ever participated.
 # Is loaded from a file when the program starts.
 class Scoreboard:
-    filename: str
+    FILENAME: str
     scoreboard: Dict[str, User]
     api: APIHandler
     luck_bump: int
