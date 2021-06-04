@@ -376,17 +376,17 @@ class Bot(commands.Bot):
             initial_channels=[self.CHANNEL],
         )
 
-    # Sends a reminder message every _remindertime seconds when a giveaway is opened.
+    # Sends a reminder message every REMINDER_TIME seconds when a giveaway is opened.
     async def giveaway_reminder(self):
         channel = bot.get_channel(self.CHANNEL)
         loop = asyncio.get_event_loop()
         while True:
             logger.info("Sending reminder to the chat.")
-            if self._giveaway_word:
-                loop.create_task(channel.send_me(f'Giveaway is still open! Make sure to join with: {self._giveaway_word}'))
+            if self.giveaway_word:
+                loop.create_task(channel.send_me(f'Giveaway is still open! Make sure to join with: {self.giveaway_word}'))
             else:
                 loop.create_task(channel.send_me('Giveaway is still open! Make sure to join with: !giveaway'))
-            await asyncio.sleep(self._remindertime)
+            await asyncio.sleep(self.REMINDER_TIME)
 
 
     async def event_pubsub(self, data):
@@ -398,8 +398,8 @@ class Bot(commands.Bot):
 
     # Triggers when the bot is ready
     async def event_ready(self) -> None:
-        self.giveaway = Giveaway(scoreboard=self._scoreboard, luck_bump=self._scoreboard.luck_bump)
-        self._scoreboard.load()
+        self.giveaway = Giveaway(scoreboard=self.scoreboard, luck_bump=self.scoreboard.LUCK_BUMP)
+        self.scoreboard.load()
         logger.info(f'Bot {self.nick} ready')
 
     # Reads every message sent in chat. Looks for the giveaway keyword and enters users if a giveaway is open.
