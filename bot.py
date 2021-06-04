@@ -430,7 +430,7 @@ class Bot(commands.Bot):
     async def open_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
-                logger.info('!open')
+                logger.info('!open-ing giveaway')
                 if not self.giveaway.opened:
                     try:
                         logger.debug("Creating reminder task.")
@@ -455,7 +455,7 @@ class Bot(commands.Bot):
     async def reopen_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
-                logger.info('!reopen')
+                logger.info('!reopen-ing giveaway')
                 if not self.giveaway.opened:
                     self.giveaway.reopen()
                     await ctx.send_me(f'== Giveaway is RE-opened == Harry up! Type !giveaway to participate')
@@ -466,7 +466,7 @@ class Bot(commands.Bot):
     async def close_command(self, ctx) -> None:
         if self.is_admin(ctx.author):
             async with self._lock:
-                logger.info('!close')
+                logger.info('!close-ing giveaway')
                 if self.giveaway.opened:
                     logger.debug("Cancelling reminder task.")
                     self._remindertask.cancel()
@@ -496,7 +496,7 @@ class Bot(commands.Bot):
         if self.is_admin(ctx.author):
             async with self._lock:
                 if self.giveaway.winner:
-                    logger.info('Winner has been !confirm ed')
+                    logger.info('!confirm-ing winner.')
                     self.giveaway.confirm_winner()
                     await ctx.send_me(f'{self.giveaway.winner} has been confirmed as winner!')
                 else:
