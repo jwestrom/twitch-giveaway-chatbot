@@ -290,10 +290,8 @@ class Giveaway:
 
         self.winner = max(results, key=results.get)
         self.winner_roll = results[self.winner]
-        self.winner_giveaways = int(self.scoreboard.get(self.winner).luck / self.luck_bump)
-        # Avoids some edge-cases where a user has received a manual luck bump.
-        if self.winner_giveaways > self.scoreboard.get(self.winner).lifetime:
-            self.winner_giveaways = self.scoreboard.get(self.winner).lifetime
+        self.winner_giveaways = int(self.scoreboard.get(self.winner).since_last_win)
+
         logger.debug(f"Drawing winner... Winner is {self.winner} that won with a value of: {self.winner_roll}")
 
         self.participants.pop(self.winner)
