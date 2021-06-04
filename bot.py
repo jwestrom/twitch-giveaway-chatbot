@@ -142,9 +142,9 @@ class Scoreboard:
 
     # Save the scoreboard to a file.
     def save(self):
-        logger.info(f'Saving scoreboard to "{self.filename}"')
+        logger.info(f'Saving scoreboard to "{self.FILENAME}"')
 
-        with open(self.filename, 'w', newline='') as _file:
+        with open(self.FILENAME, 'w', newline='') as _file:
             _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             _writer.writerow((["Username", "Luck", "Tier", "Lifetime", "ID"]))
             for user in self.scoreboard.values():
@@ -166,7 +166,7 @@ class Scoreboard:
         logger.info(f"Adding user {name}.")
         if name in self.scoreboard:
             user = self.scoreboard.get(name)
-            user.luck += self.luck_bump
+            user.luck += self.LUCK_BUMP
             user.lifetime += 1
             if not user.id:
                 user.id = self.api.getuserid(name)
