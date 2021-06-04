@@ -553,7 +553,7 @@ class Bot(commands.Bot):
     @commands.command(name='me')
     async def me_command(self, ctx) -> None:
         if self.giveaway.is_participating(ctx.author.name.lower()):
-            await ctx.send_me(f'==> {ctx.author.name} is in this Giveaway chevel3Gasm')
+            await ctx.send_me(f'==> {ctx.author.name} is in this Giveaway Pog')
         else:
             await ctx.send_me(f'==> {ctx.author.name} is NOT in this Giveaway KEKW')
 
