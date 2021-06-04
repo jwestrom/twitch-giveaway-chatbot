@@ -156,7 +156,9 @@ class Scoreboard:
 
     # Reset the luck of a user to 0
     def reset(self, name: str) -> None:
+        logger.info(f'Reseting {name} to 0 luck and 0 giveaways since last win.')
         self.scoreboard[name].luck = 0
+        self.scoreboard[name].since_last_win = 0
 
     # Adds a user to the scoreboard. This is only called when a user is added to a giveaway.
     # If the user has participated before we increase luck and lifetime by 1
