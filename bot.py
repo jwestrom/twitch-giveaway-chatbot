@@ -17,52 +17,57 @@ logger = logging.getLogger(__name__)
 
 # Ignorelist of users that are not allowed to participate in giveaways.
 class IgnoreList:
-    _users: Set[str]
-    _filename: str
+    users: Set[str]
+    FILENAME: str
 
     def __init__(self, filename: str = None):
-        self._filename = filename or 'ignorelist.txt'
-        self._users = set()
+        self.FILENAME = filename or 'ignorelist.txt'
+        self.users = set()
 
     # Loads the ignorelist from file
     def load(self) -> None:
         logger.info('Loading ignorelist...')
 
-        if not os.path.isfile(self._filename):
+        if not os.path.isfile(self.FILENAME):
             logger.info('Ignorelist not found')
             logger.info('Create empty ignorelist...')
-            with open(self._filename, 'a') as _file:
+            with open(self.FILENAME, 'a') as _file:
                 pass
 
         try:
-            with open(self._filename, 'r') as _file:
+            with open(self.FILENAME, 'r') as _file:
                 rows = csv.reader(_file, delimiter=' ', quotechar='"')
                 for user, *_ in rows:
                     if user:
-                        self._users.add(user.lower())
+                        self.users.add(user.lower())
         except Exception as e:
             print('Fail to load "{self.filename}":', e)
 
-        logger.info(f'{len(self._users)} users ignored')
-        logger.debug(f'Ignored users: {self._users}')
+        logger.info(f'{len(self.users)} users ignored')
+        logger.debug(f'Ignored users: {self.users}')
 
     # Saves the ignorelist to file
-    # Not implemented
     def save(self) -> None:
         logger.info('Saving ignorelist...')
-        with open(self._filename, 'w') as _file:
+        with open(self.FILENAME, 'w') as _file:
             _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            _writer.writerows(self._users)
+            _writer.writerows(self.users)
 
     # Adds a username to the ignorelist
-    # Not implemented
     def add(self, name) -> None:
-        if name not in self._users:
-            self._users.add(name.lower())
+        if name not in self.users:
+            self.users.add(name)
+            self.save()
+
+    # Removes a username from the ignorelist
+    def remove(self, name) -> None:
+        if name in self.users:
+            self.users.remove(name)
+            self.save()
 
     # Checks if a username is in the ignorelist
     def __contains__(self, name: str) -> bool:
-        return name.lower in self._users
+        return name.lower in self.users
 
 
 # Class for users in the giveaways. Keeps track of name, subscriber tier, current luck and lifetime giveaway entries.
