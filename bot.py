@@ -121,7 +121,7 @@ class Scoreboard:
 
         scoreboard = {}
         try:
-            with open(self.filename, 'r') as _file:
+            with open(self.FILENAME, 'r') as _file:
                 rows = csv.reader(_file, delimiter=' ', quotechar='"')
                 next(rows)
                 for row in rows:
