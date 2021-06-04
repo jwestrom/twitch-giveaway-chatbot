@@ -573,7 +573,8 @@ class Bot(commands.Bot):
         if self.is_admin(ctx.author):
             _, user, luck, *_ = ctx.content.split(' ')
             if user and luck:
-                self._scoreboard.bump(user[1:], int(luck))
+                logger.info(f'Trying to bump{user[1:].lower()} by {luck}')
+                self.scoreboard.bump(user[1:].lower(), int(luck))
 
     async def event_command_error(self, ctx, error) -> None:
         logger.error(f'Error: {error}', exc_info=True)
