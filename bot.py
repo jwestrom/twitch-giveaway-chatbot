@@ -180,17 +180,18 @@ class Scoreboard:
             user.luck += self.LUCK_BUMP
             user.lifetime += 1
             if not user.id:
-                user.id = self.api.getuserid(name)
-            tier = self.api.getsubscriptiontier(user.id)
-            if tier == '1000':
-                user.tier = self.tier1_luck
-            elif tier == '2000':
-                user.tier = self.tier2_luck
-            elif tier == '3000':
-                user.tier = self.tier3_luck
-            else:
-                user.tier = 0
             self.scoreboard[name] = user
+
+    # Gets subscription tier from a user id.
+    # Returns an int with that tiers luck
+    def getUserTier(self, id: str) -> int:
+        tier = self.API.getsubscriptiontier(id)
+        if tier == '1000':
+            return self.TIER1_LUCK
+        elif tier == '2000':
+            return self.TIER2_LUCK
+        elif tier == '3000':
+            return self.TIER3_LUCK
         else:
             self.scoreboard[name] = User(name, luck=self.luck_bump, tier=0, lifetime=1)
 
