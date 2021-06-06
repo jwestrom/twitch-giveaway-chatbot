@@ -358,12 +358,12 @@ class Bot(commands.Bot):
         self.BOT_PREFIX = config['bot'].get('BOT_PREFIX', '!')
         self.ADMINS = config['bot']['ADMINS'].split(',')
 
-        if not self.BROADCAST_ID: #Automatically gets the clientid/broadcastid of the user if it is missing
+        # Automatically gets the client/broadcast id of the user if it is missing
+        if (not self.BROADCAST_ID) or (self.BROADCAST_ID == 'your_user_accounts_id'):
             self.BROADCAST_ID = str(apihandler.APIHandler.getuserid(accessToken=self.ACCESS_TOKEN,
                                                                     clientid=self.CLIENT_ID,
                                                                     name=self.CHANNEL))
             config['bot']['BROADCAST_ID'] = self.BROADCAST_ID
-
 
         self.scoreboard = Scoreboard(bump=config['giveaway'].getint('LUCK_BUMP', fallback=10),
                                      tier1=config['giveaway'].getint('TIER1_LUCK', fallback=300),
