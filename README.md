@@ -67,10 +67,12 @@ The bot requires a TMI token, an Access token and your client ID.
 
 # Install and run
 
+*Requires python 3.7 or above. Developed on python 3.7.*
 * Download
 * Rename `settings.ini.sample` to `settings.ini`
 * Edit `settings.ini`
 
+Run commands below in cmd / powershell / WSL / Terminal in the folder. (Shift + Right-click in the folder on windows.)
 ```
 pip install -r requirements.txt
 python3 bot.py
