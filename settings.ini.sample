@@ -2,11 +2,11 @@
 ; login as bot and get TMI_TOKEN from https://twitchapps.com/tmi/
 ; login as user and get ACCESS_TOKEN and CLIENT_ID at https://twitchtokengenerator.com/
 ; The token needs chat:read, chat:edit, channel:moderate and channel:read:subscriptions
-; If you don't know your BROADCAST_ID enter your twitch username/channel name in TWITCH_NAME and the bot will get it for you
+; Your client_id can be found by sending a request to the twitch api,
+; reference: https://dev.twitch.tv/docs/api/reference#get-users
 TMI_TOKEN=oauth:<hash>
 ACCESS_TOKEN=your_access_token
 CLIENT_ID=your_client_id
-TWITCH_NAME=your_twitch_name
 BROADCAST_ID=your_user_accounts_id
 BOT_NICK=your_bot_nick
 CHANNEL=your_nick
@@ -19,7 +19,7 @@ BOT_PREFIX=!
 ; LUCK_BUMP is how much the luck increases every time a user doesn't win.
 ; The TIERn_LUCK is how much bonus the different tiers of subscribers get.
 ; The giveaway rolls a 1000 sided dice.
-; SKIP_PUNISHMENT is how many % of the users luck is removed if they win but cannot claim the prize. Can be 0
+; SKIP_PUNISHMENT is how many % of the users luck is removed if they win but cannot claim the prize. can be 0
 ; CASE_SENSITIVE is if the bot should check bot upper case and lower case to find the giveaway keyword. If this is false
 ; the bot will check both upper case and lower case
 LUCK_BUMP=10
