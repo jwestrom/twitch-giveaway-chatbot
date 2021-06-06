@@ -361,7 +361,7 @@ class Bot(commands.Bot):
         if not self.BROADCAST_ID: #Automatically gets the clientid/broadcastid of the user if it is missing
             self.BROADCAST_ID = str(apihandler.APIHandler.getuserid(accessToken=self.ACCESS_TOKEN,
                                                                     clientid=self.CLIENT_ID,
-                                                                    name=config['bot']['TWITCH_NAME']))
+                                                                    name=self.CHANNEL))
             config['bot']['BROADCAST_ID'] = self.BROADCAST_ID
 
 

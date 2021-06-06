@@ -2,11 +2,10 @@
 ; login as bot and get TMI_TOKEN from https://twitchapps.com/tmi/
 ; login as user and get ACCESS_TOKEN and CLIENT_ID at https://twitchtokengenerator.com/
 ; The token needs chat:read, chat:edit, channel:moderate and channel:read:subscriptions
-; If you don't know your BROADCAST_ID enter your twitch username/channel name in TWITCH_NAME and the bot will get it for you
+; If you don't know your BROADCAST_ID the bot will get and save it for you
 TMI_TOKEN=oauth:<hash>
 ACCESS_TOKEN=your_access_token
 CLIENT_ID=your_client_id
-TWITCH_NAME=your_twitch_name
 BROADCAST_ID=your_user_accounts_id
 BOT_NICK=your_bot_nick
 CHANNEL=your_nick
