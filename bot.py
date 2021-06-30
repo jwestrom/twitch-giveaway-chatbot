@@ -36,7 +36,9 @@ class IgnoreList:
 
         try:
             with open(self.FILENAME, 'r') as _file:
-                self.users = set[line.strip() for line in open(self.FILENAME)]
+                lines = _file.readlines()
+                for line in lines:
+                    self.users.add(line.strip())
         except Exception as e:
             print('Fail to load "{self.filename}":', e)
 
