@@ -36,10 +36,7 @@ class IgnoreList:
 
         try:
             with open(self.FILENAME, 'r') as _file:
-                rows = csv.reader(_file, delimiter=' ', quotechar='"')
-                for user, *_ in rows:
-                    if user:
-                        self.users.add(user.lower())
+                self.users = set[line.strip() for line in open(self.FILENAME)]
         except Exception as e:
             print('Fail to load "{self.filename}":', e)
 
@@ -50,18 +47,20 @@ class IgnoreList:
     def save(self) -> None:
         logger.info('Saving ignorelist...')
         with open(self.FILENAME, 'w') as _file:
-            _writer = csv.writer(_file, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            _writer.writerows(self.users)
+            for name in self.users:
+                _file.write(f'{name}\n')
 
     # Adds a username to the ignorelist
     def add(self, name) -> None:
         if name not in self.users:
+            logger.info(f'Adding {name} to ignorelist.')
             self.users.add(name)
             self.save()
 
     # Removes a username from the ignorelist
     def remove(self, name) -> None:
         if name in self.users:
+            logger.info(f'Removing {name} from ignorelist.')
             self.users.remove(name)
             self.save()
 
@@ -556,8 +555,13 @@ class Bot(commands.Bot):
             async with self._lock:
                 _, user, *_ = ctx.content.split(' ')
                 if user:
-                    logger.info(f'!ignore-ing {user[1:].lower()}')
-                    self.giveaway.IGNORE_LIST.add(user[1:].lower())
+                    if '@' in user:
+                        user = user[1:].lower()
+                        logger.info(f'!ignore-ing {user}')
+                        self.giveaway.IGNORE_LIST.add(user)
+                    else:
+                        logger.info(f'!ignore-ing {user.lower()}')
+                        self.giveaway.IGNORE_LIST.add(user.lower())
 
     # Removes a username from the ignorelist
     @commands.command(name='clear')
@@ -566,8 +570,13 @@ class Bot(commands.Bot):
             async with self._lock:
                 _, user, *_ = ctx.content.split(' ')
                 if user:
-                    logger.info(f'!clear-ing {user[1:].lower()}')
-                    self.giveaway.IGNORE_LIST.add(user[1:].lower())
+                    if '@' in user:
+                        user = user[1:].lower()
+                        logger.info(f'!clear-ing {user}')
+                        self.giveaway.IGNORE_LIST.remove(user)
+                    else:
+                        logger.info(f'!clear-ing {user.lower()}')
+                        self.giveaway.IGNORE_LIST.remove(user.lower())
 
     # Checks if a user is in the current giveaway and presents it in chat
     @commands.command(name='me')
