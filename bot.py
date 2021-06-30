@@ -360,9 +360,9 @@ class Bot(commands.Bot):
 
         # Automatically gets the client/broadcast id of the user if it is missing
         if (not self.BROADCAST_ID) or (self.BROADCAST_ID == 'your_user_accounts_id'):
-            self.BROADCAST_ID = str(apihandler.APIHandler.getuserid(accessToken=self.ACCESS_TOKEN,
-                                                                    clientid=self.CLIENT_ID,
-                                                                    name=self.CHANNEL))
+            self.BROADCAST_ID = str(apihandler.APIHandler.getuseridstatic(accessToken=self.ACCESS_TOKEN,
+                                                                          clientid=self.CLIENT_ID,
+                                                                          name=self.CHANNEL))
             config['bot']['BROADCAST_ID'] = self.BROADCAST_ID
 
         self.scoreboard = Scoreboard(bump=config['giveaway'].getint('LUCK_BUMP', fallback=10),
