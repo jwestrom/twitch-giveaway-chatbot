@@ -416,6 +416,7 @@ class Bot(commands.Bot):
         self.giveaway = Giveaway(scoreboard=self.scoreboard, luck_bump=self.scoreboard.LUCK_BUMP)
         self.scoreboard.load()
         logger.info(f'Bot {self.nick} ready')
+        asyncio.get_event_loop().create_task(bot.get_channel(self.CHANNEL).send_me(f'I am ready for action!'))
 
     # Reads every message sent in chat. Looks for the giveaway keyword and enters users if a giveaway is open.
     async def event_message(self, ctx) -> None:
