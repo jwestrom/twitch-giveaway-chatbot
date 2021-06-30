@@ -428,7 +428,7 @@ class Bot(commands.Bot):
                     logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
                     self.giveaway.add(ctx.author.name.lower())
         else:
-            if ctx.content.lower() == self.giveaway_word:
+            if ctx.content.lower() == self.giveaway_word.lower():
                 if self.giveaway.opened:
                     logger.debug(f'Adding {ctx.author.name.lower()} to giveaway!')
                     self.giveaway.add(ctx.author.name.lower())
@@ -452,10 +452,7 @@ class Bot(commands.Bot):
                     self.giveaway.open()
                     word = ctx.content.split(' ')[-1]
                     if word != "!open":
-                        if self.CASE_SENSITIVE:
-                            self.giveaway_word = word
-                        else:
-                            self.giveaway_word = word.lower()
+                        self.giveaway_word = word
                         await ctx.send_me(f'== Giveaway is opened! == '
                                           f'Type {self.giveaway_word} to participate! ==')
                     else:
