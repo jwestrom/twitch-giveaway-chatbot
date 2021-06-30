@@ -55,9 +55,9 @@ class APIHandler:
         logger.info('Got response from API! Parsing and returning.')
         return response.json()['data'][0]['id'] # Returns the id value of the first entry in data
 
-    #Static method to get the clientID/broadcasterID when it is missing
+    # Static method to get the clientID/broadcasterID when it is missing
     @staticmethod
-    def getuserid(clientid: str, accessToken: str, name: str) -> int:
+    def getuseridstatic(clientid: str, accessToken: str, name: str) -> int:
         headers = {'Authorization': f'Bearer {accessToken}', 'Client-Id': clientid}
         url = 'https://api.twitch.tv/helix/users'
         payload = {'login': name}
