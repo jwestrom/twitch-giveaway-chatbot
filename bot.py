@@ -560,8 +560,9 @@ class Bot(commands.Bot):
                         logger.info(f'!ignore-ing {user}')
                         self.giveaway.IGNORE_LIST.add(user)
                     else:
-                        logger.info(f'!ignore-ing {user.lower()}')
-                        self.giveaway.IGNORE_LIST.add(user.lower())
+                        user = user.lower()
+                        logger.info(f'!ignore-ing {user}')
+                        self.giveaway.IGNORE_LIST.add(user)
 
     # Removes a username from the ignorelist
     @commands.command(name='clear')
@@ -575,8 +576,9 @@ class Bot(commands.Bot):
                         logger.info(f'!clear-ing {user}')
                         self.giveaway.IGNORE_LIST.remove(user)
                     else:
-                        logger.info(f'!clear-ing {user.lower()}')
-                        self.giveaway.IGNORE_LIST.remove(user.lower())
+                        user = user.lower()
+                        logger.info(f'!clear-ing {user}')
+                        self.giveaway.IGNORE_LIST.remove(user)
 
     # Checks if a user is in the current giveaway and presents it in chat
     @commands.command(name='me')
