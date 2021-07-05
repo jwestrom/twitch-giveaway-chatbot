@@ -18,15 +18,7 @@ class APIHandler:
         self.clientID = clientID
         self.accessToken = accessToken
         self.broadcasterID = broadcasterID
-        self.__init_logging__()
         self.checkaccesstoken()
-
-    # Init for the logger
-    def __init_logging__(self):
-        logging.basicConfig(filename=f'{date.today().strftime("%Y-%m-%d")}-api.log',
-                            filemode='a',
-                            format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
-                            level=logging.DEBUG)
 
     # Checks if our access token is still valid. Will prompt the user to create a new one if needed.
     def checkaccesstoken(self):
