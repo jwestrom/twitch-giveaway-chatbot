@@ -604,7 +604,8 @@ class Bot(commands.Bot):
                               f'{ctx.author.name} has participated in {user_stats[2]} total giveaways'
                               f' and {user_stats[3]} since their last win!')
         else:
-            logger.warning(f'Could not find stats for user {ctx.author.name}')
+            await ctx.send_me(f'{ctx.author.name} seems to be new here, welcome! '
+                        f'Join a giveaway to get some stats.')
 
     # Increases a users luck by a number
     @commands.command(name='bump', aliases=['giveluck'])
