@@ -68,7 +68,7 @@ class IgnoreList:
 
     # Checks if a username is in the ignorelist
     def __contains__(self, name: str) -> bool:
-        return name.lower in self.users
+        return name.lower() in self.users
 
 
 # Class for users in the giveaways. Keeps track of name, subscriber tier, current luck,
