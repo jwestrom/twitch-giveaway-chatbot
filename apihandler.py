@@ -23,10 +23,6 @@ class APIHandler:
 
     # Init for the logger
     def __init_logging__(self):
-        file_handler = logging.FileHandler(f'{date.today().strftime("%Y-%m-%d")}-bot.log')
-        file_handler.setLevel(logging.DEBUG)
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setLevel(logging.ERROR)
         logging.basicConfig(filename=f'{date.today().strftime("%Y-%m-%d")}-api.log',
                             filemode='a',
                             format='%(asctime)s [%(levelname)s] [%(name)s] %(message)s',
