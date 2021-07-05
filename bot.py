@@ -166,9 +166,10 @@ class Scoreboard:
     def punish(self, name: str) -> None:
         logger.info(f'Punishing {name} for not claiming giveaway prize. '
                     f'Decreasing current luck by {self.SKIP_PUNISHMENT}%.')
-        logger.debug(f'{name} had {self.scoreboard[name].luck}.')
-        self.scoreboard[name].luck = int(self.scoreboard[name].luck * ((100 - self.SKIP_PUNISHMENT) / 100))
-        logger.debug(f'{name} now has {self.scoreboard[name].luck}.')
+        user = self.getuser(name)
+        logger.debug(f'{name} had {user.luck}.')
+        self.scoreboard[name].luck = int(user.luck * ((100 - self.SKIP_PUNISHMENT) / 100))
+        logger.debug(f'{name} now has {user.luck}.')
 
     # Adds a user to the scoreboard. This is only called when a user is added to a giveaway.
     # If the user has participated before we increase luck and lifetime by 1
