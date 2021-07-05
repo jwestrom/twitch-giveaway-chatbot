@@ -44,6 +44,7 @@ class APIHandler:
         return response.json()['data'][0]['id'] # Returns the id value of the first entry in data
 
     # Static method to get the clientID/broadcasterID when it is missing
+    # Only used for this one circumstance
     @staticmethod
     def getuseridstatic(clientid: str, accessToken: str, name: str) -> int:
         headers = {'Authorization': f'Bearer {accessToken}', 'Client-Id': clientid}
