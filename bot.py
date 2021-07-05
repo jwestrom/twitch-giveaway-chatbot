@@ -152,8 +152,8 @@ class Scoreboard:
                 _writer.writerow([user.name, user.luck, user.tier, user.lifetime, user.since_last_win, user.id])
 
     # Gets a user from the scoreboard.
-    def get(self, name: str) -> User:
-        return self.scoreboard.get(name)
+    def getuser(self, name: str) -> User:
+        return self.scoreboard[name]
 
     # Reset the luck of a user to 0
     def reset(self, name: str) -> None:
@@ -183,18 +183,18 @@ class Scoreboard:
             user.since_last_win += 1
             if not user.id:
                 user.id = self.API.getuserid(name)
-            user.tier = self.getUserTier(user.id)
+            user.tier = self.getusertier(user.id)
             self.scoreboard[name] = user
         else:
             user = User(name, luck=self.LUCK_BUMP, tier=0, lifetime=1, since_last_win=1, userid="")
             user.id = self.API.getuserid(name)
-            user.tier = self.getUserTier(user.id)
+            user.tier = self.getusertier(user.id)
             self.scoreboard[name] = user
 
     # Gets subscription tier from a user id.
     # Returns an int with that tiers luck
-    def getUserTier(self, id: str) -> int:
-        tier = self.API.getsubscriptiontier(id)
+    def getusertier(self, userid: int) -> int:
+        tier = self.API.getsubscriptiontier(userid)
         if tier == '1000':
             return self.TIER1_LUCK
         elif tier == '2000':
@@ -212,9 +212,9 @@ class Scoreboard:
         else:
             logger.warning(f'{name} is not in the scoreboard. Ignoring bump.')
 
-    # Returns a users stats: current luck, sub tier, lifetime participations and amount of giveaways since last win.
     def user_stats(self, name: str) -> [int, int, int]:
-        user = self.scoreboard.get(name)
+    # Returns a users stats: current luck, sub tier, lifetime participation's and amount of giveaways since last win.
+        user = self.getuser(name)
         return [int(user.luck / self.LUCK_BUMP), int(user.tier / 10), user.lifetime, user.since_last_win]
 
 # Class for running the giveaways. Contains logic and draw randomization
@@ -291,7 +291,7 @@ class Giveaway:
 
         self.winner = max(results, key=results.get)
         self.winner_roll = results[self.winner]
-        self.winner_giveaways = int(self.scoreboard.get(self.winner).since_last_win)
+        self.winner_giveaways = int(self.scoreboard.getuser(self.winner).since_last_win)
 
         logger.debug(f"Drawing winner... Winner is {self.winner} that won with a value of: {self.winner_roll}")
 
@@ -320,7 +320,7 @@ class Giveaway:
         logger.debug(f"Adding {name} to giveaway.")
 
         self.scoreboard.add(name)
-        self.participants[name] = self.scoreboard.get(name)
+        self.participants[name] = self.scoreboard.getuser(name)
         logger.debug(f'{name} added to giveaway.')
 
     # Returns if the user is in the current giveaway or not.
@@ -501,7 +501,7 @@ class Bot(commands.Bot):
                 if winner_name:
                     await ctx.send_me(f'== The winner is @{winner_name} == '
                                       f'Winning roll: {self.giveaway.winner_roll} == '
-                                      f'It took {self.scoreboard.get(self.giveaway.winner).since_last_win} giveaways '
+                                      f'It took {self.scoreboard.getuser(self.giveaway.winner).since_last_win} giveaways '
                                       f'to win ==')
                 else:
                     await ctx.send_me(f'== No participants ==')
