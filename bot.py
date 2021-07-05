@@ -186,7 +186,7 @@ class Scoreboard:
             user.tier = self.getusertier(user.id)
             self.scoreboard[name] = user
         else:
-            user = User(name, luck=self.LUCK_BUMP, tier=0, lifetime=1, since_last_win=1, userid="")
+            user = User(name, luck=self.LUCK_BUMP, tier=0, lifetime=1, since_last_win=1, userid='')
             user.id = self.API.getuserid(name)
             user.tier = self.getusertier(user.id)
             self.scoreboard[name] = user
