@@ -54,6 +54,7 @@ class APIHandler:
         return response.json()['data'][0]['id'] # Returns the id value of the first entry in data
 
     # Gets the subscription tiers for a list of users
+    # NOT USED
     def getsubscriptiontiers(self, userids: List[str]) -> Dict[str, int]:
         headers = {'Authorization': f'Bearer {self.accessToken}', 'Client-Id': self.clientID}
         url = 'https://api.twitch.tv/helix/subscriptions?'
@@ -85,5 +86,5 @@ class APIHandler:
         logger.info('Got response from API! Parsing and returning.')
         data = response.json()['data']
         if data:
-            return data[0]
+            return data[0]['tier']
         return ''
