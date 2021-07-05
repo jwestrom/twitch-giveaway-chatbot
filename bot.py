@@ -216,7 +216,11 @@ class Scoreboard:
     # Returns a users stats: current luck, sub tier, lifetime participation's and amount of giveaways since last win.
     def user_stats(self, name: str) -> [int, int, int, int]:
         user = self.getuser(name)
-        return [int(user.luck / self.LUCK_BUMP), int(user.tier / 10), user.lifetime, user.since_last_win]
+        if user:
+            return [int(user.luck / self.LUCK_BUMP), int(user.tier / 10), user.lifetime, user.since_last_win]
+        else:
+            logger.warning(f'{name} is not in the scoreboard. Skipping.')
+            return
 
 # Class for running the giveaways. Contains logic and draw randomization
 class Giveaway:
