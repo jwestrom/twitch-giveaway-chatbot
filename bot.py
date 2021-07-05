@@ -592,11 +592,14 @@ class Bot(commands.Bot):
     @commands.command(name='stats', aliases=['lucky', 'howlucky'])
     async def luck_command(self, ctx) -> None:
         user_stats = self.scoreboard.user_stats(ctx.author.name.lower())
-        await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]}% '
-                          f'with a subscription bonus of {user_stats[1]}% '
-                          f'for a total of {user_stats[0] + user_stats[1]}%. '
-                          f'{ctx.author.name} has participated in {user_stats[2]} total giveaways'
-                          f' and {user_stats[3]} since their last win!')
+        if user_stats:
+            await ctx.send_me(f'{ctx.author.name} has a current luck of {user_stats[0]}% '
+                              f'with a subscription bonus of {user_stats[1]}% '
+                              f'for a total of {user_stats[0] + user_stats[1]}%. '
+                              f'{ctx.author.name} has participated in {user_stats[2]} total giveaways'
+                              f' and {user_stats[3]} since their last win!')
+        else:
+            logger.warning(f'Could not find stats for user {ctx.author.name}')
 
     # Increases a users luck by a number
     @commands.command(name='bump', aliases=['giveluck'])
