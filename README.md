@@ -15,7 +15,7 @@ The bot requires a TMI token, an Access token and your client ID.
 
 !reopen 
   [admins only]
-  Just reopen giveaway with the same keyword or ! gievaway if it's closed 
+  Just reopen giveaway with the same keyword or !giveaway if it's closed 
 
 !close 
   [admins only]
